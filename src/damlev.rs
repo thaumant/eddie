@@ -1,7 +1,6 @@
 use std::cmp;
 
 
-
 const MAX_CHARS: usize = 15;
 
 
@@ -25,16 +24,28 @@ impl DamLev {
         DamLev { len1, len2, chars1, chars2, dists }
     }
 
-    pub fn dist(&mut self, str1: &str, str2: &str) -> u8 {
-        self.len1 = cmp::min(str1.len(), MAX_CHARS);
-        self.len2 = cmp::min(str2.len(), MAX_CHARS);
+    pub fn set1(&mut self, s: &str) -> &mut DamLev {
+        self.len1 = cmp::min(s.len(), MAX_CHARS);
+        for (i, c) in s.chars().take(self.len1).enumerate() {
+            self.chars1[i] = c;
+            self.dists[i + 1][0] = i as u8;
+        }
+        self
+    }
 
+    pub fn set2(&mut self, s: &str) -> &mut DamLev {
+        self.len2 = cmp::min(s.len(), MAX_CHARS);
+        for (j, c) in s.chars().take(self.len2).enumerate() {
+            self.chars2[j] = c;
+            self.dists[0][j + 1] = j as u8;
+        }
+        self
+    }
+
+    pub fn dist(&mut self) -> u8 {
         let DamLev { chars1, chars2, dists, .. } = self;
         let DamLev { len1, len2, .. } = *self;
-        let dist_max = cmp::max(len1, len2) as u8;
-
-        for (i, c) in str1.chars().take(len1).enumerate() { chars1[i] = c; }
-        for (i, c) in str2.chars().take(len2).enumerate() { chars2[i] = c; }
+        let dist_max = (len1 + len2) as u8;
 
         for i in 0..len1 + 1 { dists[i][0] = i as u8; }
         for j in 0..len2 + 1 { dists[0][j] = j as u8; }
@@ -99,149 +110,212 @@ impl DamLev {
 }
 
 
-
 #[cfg(test)]
 mod tests {
     use super::DamLev;
 
     #[test]
-    fn equality() {
-        let mut damlev = DamLev::new();
-
-        assert_eq!(damlev.dist("", ""), 0);
-        assert_eq!(damlev.dist("c", "c"), 0);
-        assert_eq!(damlev.dist("ca", "ca"), 0);
-        assert_eq!(damlev.dist("cap", "cap"), 0);
-        assert_eq!(damlev.dist("capt", "capt"), 0);
-        assert_eq!(damlev.dist("capta", "capta"), 0);
-        assert_eq!(damlev.dist("captai", "captai"), 0);
-        assert_eq!(damlev.dist("captain", "captain"), 0);
+    fn damlev_dist_equality() {
+        let mut dl = DamLev::new();
+        let sample = [
+            "captain",
+            "captai",
+            "capta",
+            "capt",
+            "cap",
+            "ca",
+            "c",
+            "",
+        ];
+        for s in sample.iter() {
+            dl.set1(s);
+            dl.set2(s);
+            assert_eq!(dl.dist(), 0);
+        }
     }
 
     #[test]
-    fn left_prefix() {
-        let mut damlev = DamLev::new();
-
-        assert_eq!(damlev.dist("", "captain"), 7);
-        assert_eq!(damlev.dist("c", "captain"), 6);
-        assert_eq!(damlev.dist("ca", "captain"), 5);
-        assert_eq!(damlev.dist("cap", "captain"), 4);
-        assert_eq!(damlev.dist("capt", "captain"), 3);
-        assert_eq!(damlev.dist("capta", "captain"), 2);
-        assert_eq!(damlev.dist("captai", "captain"), 1);
-        assert_eq!(damlev.dist("captain", "captain"), 0);
+    fn damlev_dist_left_prefix() {
+        let mut dl = DamLev::new();
+        dl.set2("captain");
+        let sample = [
+            (0, "captain"),
+            (1, "captai"),
+            (2, "capta"),
+            (3, "capt"),
+            (4, "cap"),
+            (5, "ca"),
+            (6, "c"),
+            (7, ""),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set1(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn right_prefix() {
-        let mut damlev = DamLev::new();
-
-        assert_eq!(damlev.dist("captain", ""), 7);
-        assert_eq!(damlev.dist("captain", "c"), 6);
-        assert_eq!(damlev.dist("captain", "ca"), 5);
-        assert_eq!(damlev.dist("captain", "cap"), 4);
-        assert_eq!(damlev.dist("captain", "capt"), 3);
-        assert_eq!(damlev.dist("captain", "capta"), 2);
-        assert_eq!(damlev.dist("captain", "captai"), 1);
-        assert_eq!(damlev.dist("captain", "captain"), 0);
+    fn damlev_dist_right_prefix() {
+        let mut dl = DamLev::new();
+        dl.set1("captain");
+        let sample = [
+            (0, "captain"),
+            (1, "captai"),
+            (2, "capta"),
+            (3, "capt"),
+            (4, "cap"),
+            (5, "ca"),
+            (6, "c"),
+            (7, ""),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set2(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn del_continuous() {
-        let mut damlev = DamLev::new();
+    fn damlev_dist_del_continuous() {
+        let mut dl = DamLev::new();
+        dl.set2("captain");
+        let sample = [
+            (1, "_captain"),
+            (2, "__captain"),
+            (3, "___captain"),
+            (4, "____captain"),
 
-        assert_eq!(damlev.dist("_captain", "captain"), 1);
-        assert_eq!(damlev.dist("__captain", "captain"), 2);
-        assert_eq!(damlev.dist("___captain", "captain"), 3);
+            (1, "cap_tain"),
+            (2, "cap__tain"),
+            (3, "cap___tain"),
+            (4, "cap____tain"),
 
-        assert_eq!(damlev.dist("cap_tain", "captain"), 1);
-        assert_eq!(damlev.dist("cap__tain", "captain"), 2);
-        assert_eq!(damlev.dist("cap___tain", "captain"), 3);
-
-        assert_eq!(damlev.dist("captain_", "captain"), 1);
-        assert_eq!(damlev.dist("captain__", "captain"), 2);
-        assert_eq!(damlev.dist("captain___", "captain"), 3);
+            (1, "captain_"),
+            (2, "captain__"),
+            (3, "captain___"),
+            (4, "captain____"),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set1(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn add_continuous() {
-        let mut damlev = DamLev::new();
+    fn damlev_dist_add_continuous() {
+        let mut dl = DamLev::new();
+        dl.set1("captain");
+        let sample = [
+            (1, "_captain"),
+            (2, "__captain"),
+            (3, "___captain"),
+            (4, "____captain"),
 
-        assert_eq!(damlev.dist("captain", "_captain"), 1);
-        assert_eq!(damlev.dist("captain", "__captain"), 2);
-        assert_eq!(damlev.dist("captain", "___captain"), 3);
+            (1, "cap_tain"),
+            (2, "cap__tain"),
+            (3, "cap___tain"),
+            (4, "cap____tain"),
 
-        assert_eq!(damlev.dist("captain", "cap_tain"), 1);
-        assert_eq!(damlev.dist("captain", "cap__tain"), 2);
-        assert_eq!(damlev.dist("captain", "cap___tain"), 3);
-
-        assert_eq!(damlev.dist("captain", "captain_"), 1);
-        assert_eq!(damlev.dist("captain", "captain__"), 2);
-        assert_eq!(damlev.dist("captain", "captain___"), 3);
+            (1, "captain_"),
+            (2, "captain__"),
+            (3, "captain___"),
+            (4, "captain____"),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set2(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn sub_continuous() {
-        let mut damlev = DamLev::new();
+    fn damlev_dist_sub_continuous() {
+        let mut dl = DamLev::new();
+        dl.set1("captain");
+        let sample = [
+            (1, "_aptain"),
+            (2, "__ptain"),
+            (3, "___tain"),
+            (4, "____ain"),
 
-        assert_eq!(damlev.dist("captain", "_aptain"), 1);
-        assert_eq!(damlev.dist("captain", "__ptain"), 2);
-        assert_eq!(damlev.dist("captain", "___tain"), 3);
+            (1, "cap_ain"),
+            (2, "cap__in"),
+            (3, "ca___in"),
+            (4, "ca____n"),
 
-        assert_eq!(damlev.dist("captain", "cap_ain"), 1);
-        assert_eq!(damlev.dist("captain", "cap__in"), 2);
-        assert_eq!(damlev.dist("captain", "ca___in"), 3);
-
-        assert_eq!(damlev.dist("captain", "captai_"), 1);
-        assert_eq!(damlev.dist("captain", "capta__"), 2);
-        assert_eq!(damlev.dist("captain", "capt___"), 3);
+            (1, "captai_"),
+            (2, "capta__"),
+            (3, "capt___"),
+            (4, "cap____"),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set2(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn del_intermittent() {
-        let mut damlev = DamLev::new();
+    fn damlev_dist_del_intermittent() {
+        let mut dl = DamLev::new();
+        dl.set2("captain");
+        let sample = [
+            (1, "_captain"),
+            (2, "_c_aptain"),
+            (3, "_c_a_ptain"),
+            (4, "_c_a_p_tain"),
 
-        assert_eq!(damlev.dist("_captain", "captain"), 1);
-        assert_eq!(damlev.dist("_c_aptain", "captain"), 2);
-        assert_eq!(damlev.dist("_c_a_ptain", "captain"), 3);
-
-        assert_eq!(damlev.dist("captain_", "captain"), 1);
-        assert_eq!(damlev.dist("captai_n_", "captain"), 2);
-        assert_eq!(damlev.dist("capta_i_n_", "captain"), 3);
+            (1, "captain_"),
+            (2, "captai_n_"),
+            (3, "capta_i_n_"),
+            (4, "capt_a_i_n_"),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set1(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn add_intermittent() {
-        let mut damlev = DamLev::new();
+    fn damlev_dist_add_intermittent() {
+        let mut dl = DamLev::new();
+        dl.set1("captain");
+        let sample = [
+            (1, "_captain"),
+            (2, "_c_aptain"),
+            (3, "_c_a_ptain"),
+            (4, "_c_a_p_tain"),
 
-        assert_eq!(damlev.dist("captain", "_captain"), 1);
-        assert_eq!(damlev.dist("captain", "_c_aptain"), 2);
-        assert_eq!(damlev.dist("captain", "_c_a_ptain"), 3);
-
-        assert_eq!(damlev.dist("captain", "captain_"), 1);
-        assert_eq!(damlev.dist("captain", "captai_n_"), 2);
-        assert_eq!(damlev.dist("captain", "capta_i_n_"), 3);
+            (1, "captain_"),
+            (2, "captai_n_"),
+            (3, "capta_i_n_"),
+            (4, "capt_a_i_n_"),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set2(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn sub_intermittent() {
-        let mut damlev = DamLev::new();
+    fn damlev_dist_sub_intermittent() {
+        let mut dl = DamLev::new();
+        dl.set1("captain");
+        let sample = [
+            (1, "_aptain"),
+            (2, "_a_tain"),
+            (3, "_a_t_in"),
 
-        assert_eq!(damlev.dist("captain", "_aptain"), 1);
-        assert_eq!(damlev.dist("captain", "_a_tain"), 2);
-        assert_eq!(damlev.dist("captain", "_a_t_in"), 3);
-
-        assert_eq!(damlev.dist("captain", "captai_"), 1);
-        assert_eq!(damlev.dist("captain", "capt_i_"), 2);
-        assert_eq!(damlev.dist("captain", "ca_t_i_"), 3);
+            (1, "captai_"),
+            (2, "capt_i_"),
+            (3, "ca_t_i_"),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set2(s).dist(), *i);
+        }
     }
 
     #[test]
-    fn swp_one() {
-        let mut damlev = DamLev::new();
-
-        assert_eq!(damlev.dist("captain", "acptain"), 1);
-        assert_eq!(damlev.dist("captain", "catpain"), 1);
-        assert_eq!(damlev.dist("captain", "captani"), 1);
+    fn damlev_dist_swp_one() {
+        let mut dl = DamLev::new();
+        dl.set1("captain");
+        let sample = [
+            (1, "acptain"),
+            (1, "catpain"),
+            (1, "captani"),
+        ];
+        for (i, s) in sample.iter() {
+            assert_eq!(dl.set2(s).dist(), *i);
+        }
     }
 }
