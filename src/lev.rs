@@ -29,53 +29,55 @@ impl Lev {
         self.len1 = cmp::min(str1.len(), MAX_CHARS);
         self.len2 = cmp::min(str2.len(), MAX_CHARS);
 
-        for (i, c) in str1.chars().take(self.len1).enumerate() { self.chars1[i] = c; }
-        for (i, c) in str2.chars().take(self.len2).enumerate() { self.chars2[i] = c; }
+        let Lev { len1, len2, .. } = *self;
+        let Lev { chars1, chars2, dists, .. } = self;
 
-        for i in 0..self.len1 + 1 { self.dists[i][0] = i as u8; }
-        for i in 0..self.len2 + 1 { self.dists[0][i] = i as u8; }
+        for (i, c) in str1.chars().take(len1).enumerate() { chars1[i] = c; }
+        for (i, c) in str2.chars().take(len2).enumerate() { chars2[i] = c; }
 
-        for row in 1..self.len1 + 1 {
-            for col in 1..self.len2 + 1 {
-                let char1 = self.chars1[row - 1];
-                let char2 = self.chars2[col - 1];
+        for row in 0..len1 + 1 { dists[row][0] = row as u8; }
+        for col in 0..len2 + 1 { dists[0][col] = col as u8; }
 
-                let cost_sub = if char1 == char2 { 0 } else { 1 };
+        for row in 1..len1 + 1 {
+            for col in 1..len2 + 1 {
+                let cost_sub = (chars1[row - 1] != chars2[col - 1]) as u8;
 
-                let dist_del = self.dists[row - 1][col] + 1;
-                let dist_add = self.dists[row][col - 1] + 1;
-                let dist_sub = self.dists[row - 1][col - 1] + cost_sub;
+                let dist_del = dists[row - 1][col] + 1;
+                let dist_add = dists[row][col - 1] + 1;
+                let dist_sub = dists[row - 1][col - 1] + cost_sub;
 
-                let mut dist_min = cmp::max(self.len1, self.len2) as u8;
+                let mut dist_min = cmp::max(len1, len2) as u8;
                 dist_min = cmp::min(dist_min, dist_del);
                 dist_min = cmp::min(dist_min, dist_add);
                 dist_min = cmp::min(dist_min, dist_sub);
 
-                self.dists[row][col] = dist_min;
+                dists[row][col] = dist_min;
             }
         }
 
-        self.dists[self.len1][self.len2]
+        dists[len1][len2]
     }
 
     pub fn repr(&self) -> String {
-        let Lev {len1, len2, ..} = *self;
+        let Lev { len1, len2, .. } = *self;
+        let Lev { chars1, chars2, dists, .. } = self;
+
         let mut repr = String::with_capacity((len1 + 2) * (len2 + 2));
 
         repr.push_str(&format!("{} x {}\n", len1, len2));
 
         repr.push_str(&"    ");
         for col in 0..len1 {
-            repr.push(self.chars1[col]);
+            repr.push(chars1[col]);
             repr.push(' ');
         }
         repr.push('\n');
 
         for row in 0..len2 + 1 {
-            repr.push(if row == 0 { ' ' } else { self.chars2[row - 1] });
+            repr.push(if row == 0 { ' ' } else { chars2[row - 1] });
             repr.push(' ');
             for col in 0..len1 + 1 {
-                repr.push_str(&self.dists[col][row].to_string());
+                repr.push_str(&dists[col][row].to_string());
                 repr.push(' ');
             }
             repr.push('\n');
