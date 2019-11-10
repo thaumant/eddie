@@ -1,69 +1,56 @@
+mod constants;
+mod matrix;
+mod word;
+
+use std::fmt;
 use std::cmp;
+use matrix::DistanceMatrix;
+use word::Word;
 
 
-const MAX_CHARS: usize = 15;
-
-
-#[derive(Debug)]
 pub struct DamLev {
-    len1: usize,
-    len2: usize,
-    chars1: [char; MAX_CHARS],
-    chars2: [char; MAX_CHARS],
-    dists: [[u8; MAX_CHARS + 1]; MAX_CHARS + 1],
+    word1: Word,
+    word2: Word,
+    dists: DistanceMatrix,
 }
 
 
 impl DamLev {
     pub fn new() -> DamLev {
-        let len1 = 0;
-        let len2 = 0;
-        let chars1 = ['0'; MAX_CHARS];
-        let chars2 = ['0'; MAX_CHARS];
-        let dists = [[0; MAX_CHARS + 1]; MAX_CHARS + 1];
-        DamLev { len1, len2, chars1, chars2, dists }
+        let word1 = Word::new();
+        let word2 = Word::new();
+        let dists = DistanceMatrix::new();
+        DamLev { word1, word2, dists }
     }
 
     pub fn set1(&mut self, s: &str) -> &mut DamLev {
-        self.len1 = cmp::min(s.len(), MAX_CHARS);
-        for (i, c) in s.chars().take(self.len1).enumerate() {
-            self.chars1[i] = c;
-            self.dists[i + 1][0] = i as u8;
-        }
+        self.word1.write(s);
         self
     }
 
     pub fn set2(&mut self, s: &str) -> &mut DamLev {
-        self.len2 = cmp::min(s.len(), MAX_CHARS);
-        for (j, c) in s.chars().take(self.len2).enumerate() {
-            self.chars2[j] = c;
-            self.dists[0][j + 1] = j as u8;
-        }
+        self.word2.write(s);
         self
     }
 
     pub fn dist(&mut self) -> u8 {
-        let DamLev { chars1, chars2, dists, .. } = self;
-        let DamLev { len1, len2, .. } = *self;
-        let dist_max = (len1 + len2) as u8;
+        let DamLev { word1, word2, dists, .. } = self;
+        let dist_max = (word1.len + word2.len) as u8;
 
-        for i in 0..len1 + 1 { dists[i][0] = i as u8; }
-        for j in 0..len2 + 1 { dists[0][j] = j as u8; }
+        for i in 1..word1.len + 1 {
+            for j in 1..word2.len + 1 {
+                let cost_sub = (word1[i - 1] != word2[j - 1]) as u8;
 
-        for i in 1..len1 + 1 {
-            for j in 1..len2 + 1 {
-                let cost_sub = (chars1[i - 1] != chars2[j - 1]) as u8;
-
-                let dist_del = dists[i - 1][j] + 1;
-                let dist_add = dists[i][j - 1] + 1;
-                let dist_sub = dists[i - 1][j - 1] + cost_sub;
+                let dist_del = dists[(i - 1, j)] + 1;
+                let dist_add = dists[(i, j - 1)] + 1;
+                let dist_sub = dists[(i - 1, j - 1)] + cost_sub;
                 let dist_swp = {
                     let swp =
                         i > 1
                         && j > 1
-                        && chars1[i - 1] == chars2[j - 2]
-                        && chars2[j - 1] == chars1[i - 2];
-                    if swp { dists[i - 2][j - 2] + 1 } else { dist_max }
+                        && word1[i - 1] == word2[j - 2]
+                        && word2[j - 1] == word1[i - 2];
+                    if swp { dists[(i - 2, j - 2)] + 1 } else { dist_max }
                 };
 
                 let mut dist_min = dist_max;
@@ -72,40 +59,44 @@ impl DamLev {
                 dist_min = cmp::min(dist_min, dist_sub);
                 dist_min = cmp::min(dist_min, dist_swp);
 
-                dists[i][j] = dist_min;
+                dists[(i, j)] = dist_min;
             }
         }
 
-        dists[len1][len2]
+        dists[(word1.len, word2.len)]
+    }
+}
+
+
+impl fmt::Display for DamLev {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} x {}\n", self.word1.len, self.word2.len)?;
+        self.fmt_table_head(f)?;
+        self.fmt_table_body(f)?;
+        Ok(())
+    }
+}
+
+impl DamLev {
+    fn fmt_table_head(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "    ")?;
+        for col in 0..self.word1.len {
+            write!(f, "{} ", self.word1[col])?;
+        }
+        write!(f, "\n")?;
+        Ok(())
     }
 
-    pub fn repr(&self) -> String {
-        let DamLev { len1, len2, .. } = *self;
-        let DamLev { chars1, chars2, dists, .. } = self;
-
-        let mut repr = String::with_capacity((len1 + 2) * (len2 + 2));
-
-        repr.push_str(&format!("{} x {}\n", len1, len2));
-
-        repr.push_str(&"    ");
-        for col in 0..len1 {
-            repr.push(chars1[col]);
-            repr.push(' ');
-        }
-        repr.push('\n');
-
-        for row in 0..len2 + 1 {
-            repr.push(if row == 0 { ' ' } else { chars2[row - 1] });
-            repr.push(' ');
-            for col in 0..len1 + 1 {
-                repr.push_str(&dists[col][row].to_string());
-                repr.push(' ');
+    fn fmt_table_body(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row in 0..self.word2.len + 1 {
+            if row == 0 { write!(f, "  ")?; }
+            if row >= 1 { write!(f, "{} ", self.word2[row - 1])?; }
+            for col in 0..self.word1.len + 1 {
+                write!(f, "{} ", self.dists[(col, row)].to_string())?;
             }
-            repr.push('\n');
+            write!(f, "\n")?;
         }
-        repr.push('\n');
-
-        repr
+        Ok(())
     }
 }
 
@@ -135,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn damlev_dist_left_prefix() {
+    fn damlev_dist_prefix_left() {
         let mut dl = DamLev::new();
         dl.set2("captain");
         let sample = [
@@ -154,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn damlev_dist_right_prefix() {
+    fn damlev_dist_prefix_right() {
         let mut dl = DamLev::new();
         dl.set1("captain");
         let sample = [
