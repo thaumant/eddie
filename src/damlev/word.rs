@@ -5,7 +5,7 @@ use super::constants::MAX_CHARS;
 
 pub struct Word {
   chars: [char; MAX_CHARS],
-  pub len: usize,
+  len: usize,
 }
 
 
@@ -16,7 +16,11 @@ impl Word {
       Word { chars, len }
   }
 
-  pub fn write(&mut self, s: &str) -> () {
+  pub fn len(&self) -> usize {
+    self.len
+  }
+
+  pub fn store(&mut self, s: &str) -> () {
       self.len = cmp::min(s.len(), MAX_CHARS);
       for (i, c) in s.chars().take(self.len).enumerate() {
           self.chars[i] = c;
