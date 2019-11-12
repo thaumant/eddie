@@ -1,103 +1,127 @@
-mod constants;
-mod matrix;
-mod word;
-
 #[cfg(test)]
 mod tests;
 
 use std::fmt;
 use std::collections::HashMap;
-use matrix::DistanceMatrix;
-use word::Word;
-use constants::MAX_CHARS;
+use std::cell::RefCell;
+
+const MAX_CHARS: usize = 20;
+const MATRIX_SIZE: usize = MAX_CHARS + 2;
 
 
 pub struct DamLev {
-    word1: Word,
-    word2: Word,
-    dists: DistanceMatrix,
-    last_i1: HashMap<char, usize>,
+    state: RefCell<(
+        String,
+        String,
+        [u8; MATRIX_SIZE * MATRIX_SIZE],
+        HashMap<char, usize>,
+    )>,
 }
 
 
 impl DamLev {
     pub fn new() -> Self {
-        let word1 = Word::new();
-        let word2 = Word::new();
-        let dists = DistanceMatrix::new();
+        let mut dists = [0u8; MATRIX_SIZE * MATRIX_SIZE];
+        for i in 0..MATRIX_SIZE {
+            dists[ix(i, 0)] = MAX_CHARS as u8 * 2;
+            dists[ix(0, i)] = MAX_CHARS as u8 * 2;
+            if i == 0 { continue; }
+            dists[ix(i, 1)] = i as u8 - 1;
+            dists[ix(1, i)] = i as u8 - 1;
+        }
+        let word1 = String::with_capacity(MAX_CHARS);
+        let word2 = String::with_capacity(MAX_CHARS);
         let last_i1 = HashMap::with_capacity(MAX_CHARS);
-        DamLev { word1, word2, dists, last_i1 }
+        let state = RefCell::new((word1, word2, dists, last_i1));
+        DamLev { state }
     }
 
-    pub fn set1(&mut self, s: &str) -> &mut Self {
-        self.word1.store(s);
-        self
+    pub fn dist(&self, s1: &str, s2: &str) -> usize {
+        self.build_matrix(s1, s2);
+        let (word1, word2, dists, ..) = &*self.state.borrow();
+        dists[ix(word1.len() + 1, word2.len() + 1)] as usize
     }
 
-    pub fn set2(&mut self, s: &str) -> &mut Self {
-        self.word2.store(s);
-        self
-    }
+    fn build_matrix(&self, s1: &str, s2: &str) -> () {
+        let (word1, word2, dists, last_i1) = &mut *self.state.borrow_mut();
 
-    pub fn dist(&mut self) -> usize {
-        let DamLev { word1, word2, dists, last_i1 } = self;
         last_i1.clear();
+        word1.clear();
+        word2.clear();
+        for c in s1.chars().take(MAX_CHARS) { word1.push(c); }
+        for c in s2.chars().take(MAX_CHARS) { word2.push(c); }
 
-        for i1 in 1..word1.len() + 1 {
+        for (i1, char1) in word1.chars().enumerate() {
             let mut l2 = 0;
 
-            for i2 in 1..word2.len() + 1 {
-                let l1 = *last_i1.get(&word2[i2 - 1]).unwrap_or(&0);
-                let eq = word1[i1 - 1] == word2[i2 - 1];
+            for (i2, char2) in word2.chars().enumerate() {
+                let l1 = *last_i1.get(&char2).unwrap_or(&0);
 
-                let add = dists[(i1 + 1, i2)] + 1;
-                let del = dists[(i1, i2 + 1)] + 1;
-                let sub = dists[(i1, i2)] + !eq as usize;
-                let swp = dists[(l1, l2)] + (i1 - l1 - 1) + (i2 - l2 - 1) + 1;
+                dists[ix(i1 + 2, i2 + 2)] = min4(
+                    dists[ix(i1 + 2, i2 + 1)] + 1,
+                    dists[ix(i1 + 1, i2 + 2)] + 1,
+                    dists[ix(i1 + 1, i2 + 1)] + (char1 != char2) as u8,
+                    dists[ix(l1, l2)] + (i1 - l1) as u8 + (i2 - l2) as u8 + 1,
+                );
 
-                dists[(i1 + 1, i2 + 1)] = min4(add, del, sub, swp);
-                if eq { l2 = i2; }
+                if char1 == char2 { l2 = i2 + 1; }
             }
-            last_i1.insert(word1[i1 - 1], i1);
+            last_i1.insert(char1, i1 + 1);
         }
-        dists[(word1.len() + 1, word2.len() + 1)]
     }
+}
+
+
+#[inline]
+fn min4(a: u8, b: u8, c: u8, d: u8) -> u8 {
+    let mut min = a;
+    if b < min { min = b; }
+    if c < min { min = c; }
+    if d < min { min = d; }
+    min
+}
+
+
+#[inline]
+fn ix(i: usize, j: usize) -> usize {
+    i * MATRIX_SIZE + j
 }
 
 
 impl fmt::Display for DamLev {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let DamLev { word1, word2, dists, .. } = self;
+        let (word1, word2, dists, ..) = &*self.state.borrow();
 
         let line = "─".repeat((word1.len() + 1) * 3);
 
+        // header
         write!(f, "┌───┬{}┐\n", line)?;
         write!(f, "│   │   ")?;
-        for col in 0..word1.len() {
-            write!(f, " {} ", word1[col])?;
+        for char1 in word1.chars() {
+            write!(f, " {} ", char1)?;
         }
         write!(f, "│\n")?;
         write!(f, "├───┼{}┤\n", line)?;
 
-        for row in 1..word2.len() + 2 {
-            if row <= 1 { write!(f, "│   │")?; }
-            if row >= 2 { write!(f, "│ {} │", word2[row - 2])?; }
+        // first row
+        write!(f, "│   │")?;
+        for col in 1..word1.len() + 2 {
+            write!(f, "{:>2} ", dists[ix(col, 1)].to_string())?;
+        }
+        write!(f, "│\n")?;
+
+        // rest rows
+        for (row, char2) in word2.chars().enumerate() {
+            write!(f, "│ {} │", char2)?;
             for col in 1..word1.len() + 2 {
-                write!(f, "{:>2} ", dists[(col, row)].to_string())?;
+                write!(f, "{:>2} ", dists[ix(col, row + 2)].to_string())?;
             }
             write!(f, "│\n")?;
         }
 
+        // footer
         write!(f, "└───┴{}┘\n", line)?;
 
         Ok(())
     }
-}
-
-fn min4(a: usize, b: usize, c: usize, d: usize) -> usize {
-    let mut min = a;
-    if b < min { min = b }
-    if c < min { min = c }
-    if d < min { min = d }
-    min
 }
