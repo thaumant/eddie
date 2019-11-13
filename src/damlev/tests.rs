@@ -19,30 +19,10 @@ fn damlev_dist_equality() {
 }
 
 #[test]
-fn damlev_dist_prefix_left() {
-    let dl = DamLev::new();
-    let s2 = "captain";
-    let sample = [
-        (0, "captain"),
-        (1, "captai"),
-        (2, "capta"),
-        (3, "capt"),
-        (4, "cap"),
-        (5, "ca"),
-        (6, "c"),
-        (7, ""),
-    ];
-    for (d, s1) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
-    }
-}
-
-#[test]
-fn damlev_dist_prefix_right() {
+fn damlev_dist_prefix() {
     let dl = DamLev::new();
     let s1 = "captain";
     let sample = [
-        (0, "captain"),
         (1, "captai"),
         (2, "capta"),
         (3, "capt"),
@@ -53,6 +33,7 @@ fn damlev_dist_prefix_right() {
     ];
     for (d, s2) in sample.iter() {
         assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(dl.dist(s2, s1), *d);
     }
 }
 
@@ -239,7 +220,7 @@ fn damlev_dist_mixed() {
 }
 
 #[test]
-fn damlev_dist_limit() {
+fn damlev_dist_max_chars() {
     let dl = DamLev::new();
 
     for len in 0 .. MAX_CHARS + 1 {
@@ -254,5 +235,38 @@ fn damlev_dist_limit() {
         let s2 = &"b".repeat(len);
         assert_eq!(dl.dist(s1, s2), MAX_CHARS);
         assert_eq!(dl.dist(s2, s1), MAX_CHARS);
+    }
+}
+
+#[test]
+fn damlev_dist_utf() {
+    let dl = DamLev::new();
+    let sample = [
+        (2, "ca", "abc"),
+        (2, "a tc", "a cat"),
+        (3, "a cat", "an abct"),
+        (3, "captain", "atpcain"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(dl.dist(s2, s1), *d);
+    }
+}
+
+#[test]
+fn damlev_dist_utf_multibyte() {
+    let dl = DamLev::new();
+    let s1 = "もしもし";
+    let sample= [
+        (1, "もしもしし"),
+        (0, "もしもし"),
+        (1, "もしまし"),
+        (1, "もしし"),
+        (2, "もし"),
+        (3, "し"),
+        (4, ""),
+    ];
+    for (d, s2) in sample.iter() {
+        assert_eq!(dl.dist(s1, s2), *d);
     }
 }

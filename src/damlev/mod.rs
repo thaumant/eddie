@@ -39,8 +39,11 @@ impl DamLev {
     pub fn dist(&self, s1: &str, s2: &str) -> usize {
         self.build_matrix(s1, s2);
         let (word1, word2, dists, ..) = &*self.state.borrow();
-        dists[ix(word1.len() + 1, word2.len() + 1)] as usize
+        let len1 = word1.chars().count();
+        let len2 = word2.chars().count();
+        dists[ix(len1 + 1, len2 + 1)] as usize
     }
+
 
     fn build_matrix(&self, s1: &str, s2: &str) -> () {
         let (word1, word2, dists, last_i1) = &mut *self.state.borrow_mut();
@@ -91,8 +94,8 @@ fn ix(i: usize, j: usize) -> usize {
 impl fmt::Display for DamLev {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (word1, word2, dists, ..) = &*self.state.borrow();
-
-        let line = "─".repeat((word1.len() + 1) * 3);
+        let len1 = word1.chars().count();
+        let line = "─".repeat((len1 + 1) * 3);
 
         // header
         write!(f, "┌───┬{}┐\n", line)?;
@@ -105,7 +108,7 @@ impl fmt::Display for DamLev {
 
         // first row
         write!(f, "│   │")?;
-        for col in 1..word1.len() + 2 {
+        for col in 1..len1 + 2 {
             write!(f, "{:>2} ", dists[ix(col, 1)].to_string())?;
         }
         write!(f, "│\n")?;
@@ -113,7 +116,7 @@ impl fmt::Display for DamLev {
         // rest rows
         for (row, char2) in word2.chars().enumerate() {
             write!(f, "│ {} │", char2)?;
-            for col in 1..word1.len() + 2 {
+            for col in 1..len1 + 2 {
                 write!(f, "{:>2} ", dists[ix(col, row + 2)].to_string())?;
             }
             write!(f, "│\n")?;
