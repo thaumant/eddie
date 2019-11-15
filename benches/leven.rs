@@ -1,8 +1,8 @@
 use rand::Rng;
-use eddie::damlev::DamLev;
+use eddie::leven::Leven;
 use rand::rngs::ThreadRng;
 use std::time::Duration;
-use distance;
+// use distance;
 use strsim;
 
 use criterion::{
@@ -13,9 +13,9 @@ use criterion::{
 };
 
 
-pub fn damlev_benchmark(cr: &mut Criterion) {
-    let dl = DamLev::new();
-    let mut group = cr.benchmark_group("damlev");
+pub fn leven_benchmark(cr: &mut Criterion) {
+    let lv = Leven::new();
+    let mut group = cr.benchmark_group("leven");
 
     for size in &[3, 6, 12, 15] {
         let mut gen = Generator::new(*size, 2);
@@ -26,7 +26,7 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    dl.dist(s1, black_box(s2));
+                    lv.dist(s1, black_box(s2));
                 });
             }
         );
@@ -37,7 +37,7 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    strsim::damerau_levenshtein(s1, black_box(s2));
+                    strsim::levenshtein(s1, black_box(s2));
                 });
             }
         );
@@ -48,7 +48,7 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    distance::damerau_levenshtein(s1, black_box(s2));
+                    distance::levenshtein(s1, black_box(s2));
                 });
             }
         );
@@ -63,7 +63,7 @@ criterion_group!{
     config = Criterion::default()
                 .warm_up_time(Duration::from_millis(500))
                 .measurement_time(Duration::from_millis(1000));
-    targets = damlev_benchmark
+    targets = leven_benchmark
 }
 
 criterion_main!(benches);
@@ -74,7 +74,7 @@ const GEN_SAMPLE_SIZE: usize = 100;
 
 struct Generator {
     pub sample: Vec<(String, String, usize)>,
-    dl: DamLev,
+    lv: Leven,
     rng: ThreadRng,
     len: usize,
     edits: usize,
@@ -87,10 +87,10 @@ impl Generator {
     pub fn new(len: usize, edits: usize) -> Generator {
         let chars = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let rng = rand::thread_rng();
-        let dl = DamLev::new();
+        let lv = Leven::new();
         let sample = Vec::with_capacity(GEN_SAMPLE_SIZE);
         let i = 0;
-        let mut gen = Generator { dl, rng, len, edits, chars, sample, i };
+        let mut gen = Generator { lv, rng, len, edits, chars, sample, i };
         gen.fill();
         gen
     }
@@ -106,7 +106,7 @@ impl Generator {
         for _ in 0..GEN_SAMPLE_SIZE {
             let w1 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
-            let d = self.dl.dist(&w1, &w2);
+            let d = self.lv.dist(&w1, &w2);
             self.sample.push((w1, w2, d));
         }
         self
@@ -129,29 +129,14 @@ impl Generator {
             if word.len() == 0 { break; }
             let i = rng.gen_range(0, word.len()) as usize;
             let c = chars[rng.gen_range(0, chars.len()) as usize];
-            let case = rng.gen_range(0, 4);
+            let case = rng.gen_range(0, 3);
             match case {
                 0 => { word.insert(i, c); }
                 1 => { word.remove(i); }
                 2 => { word[i] = c; }
-                3 => {
-                    if word.len() < 2 { continue; }
-                    let c1 = word.remove(clamp(i, &word));
-                    let c2 = word.remove(clamp(i, &word));
-                    word.insert(clamp(i, &word), c2);
-                    word.insert(clamp(i, &word), c1);
-                }
                 _ => { panic!("Unreachable"); }
             }
         }
         word.iter().collect()
     }
-}
-
-
-fn clamp(n: usize, word: &Vec<char>) -> usize {
-    let len = word.len();
-    if len == 0 { return 0; }
-    if n > len - 1 { return len - 1; }
-    n
 }

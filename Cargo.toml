@@ -15,3 +15,7 @@ rand = "0.7"
 [[bench]]
 name = "damlev"
 harness = false
+
+[[bench]]
+name = "leven"
+harness = false
