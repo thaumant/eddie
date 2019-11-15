@@ -1,9 +1,74 @@
 use rand::Rng;
-use rand::rngs::ThreadRng;
 use eddie::damlev::DamLev;
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use rand::rngs::ThreadRng;
+use std::time::Duration;
 use distance;
 use strsim;
+
+use criterion::{
+    black_box,
+    criterion_group,
+    criterion_main,
+    Criterion,
+};
+
+
+pub fn damlev_benchmark(cr: &mut Criterion) {
+    // let mut cr = &cr.sample_size(10).warm_up_time(std::time::Duration::from_secs(1));
+    let dl = DamLev::new();
+    let mut group = cr.benchmark_group("damlev");
+
+    for size in &[3, 6, 12, 15] {
+        let mut gen = Generator::new(*size, 2);
+
+        group.bench_with_input(
+            format!("eddie size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2, _) = &gen.next();
+                    dl.dist(s1, black_box(s2));
+                });
+            }
+        );
+
+        group.bench_with_input(
+            format!("strsim size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2, _) = &gen.next();
+                    strsim::damerau_levenshtein(s1, black_box(s2));
+                });
+            }
+        );
+
+        group.bench_with_input(
+            format!("distance size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2, _) = &gen.next();
+                    distance::damerau_levenshtein(s1, black_box(s2));
+                });
+            }
+        );
+    }
+
+    group.finish();
+}
+
+
+criterion_group!{
+    name = benches;
+    config = Criterion::default()
+                .warm_up_time(Duration::from_millis(500))
+                .measurement_time(Duration::from_millis(1000));
+    targets = damlev_benchmark
+}
+
+criterion_main!(benches);
+
 
 const GEN_SAMPLE_SIZE: usize = 100;
 
@@ -31,10 +96,11 @@ impl Generator {
         gen
     }
 
-    pub fn next_i(&mut self) -> usize {
+    #[inline]
+    pub fn next<'a>(&'a mut self) -> &'a (String, String, usize) {
         let i = self.i;
         if self.i >= self.sample.len() { self.i = 0; }
-        i
+        &self.sample[i]
     }
 
     fn fill(&mut self) -> &mut Self {
@@ -90,42 +156,3 @@ fn clamp(n: usize, word: &Vec<char>) -> usize {
     if n > len - 1 { return len - 1; }
     n
 }
-
-
-pub fn criterion_benchmark(criterion: &mut Criterion) {
-    for len in [3, 6, 9, 12].iter() {
-        let mut gen = Generator::new(*len, 2);
-
-        criterion.bench_function(&format!("eddie / damlev / len={}", len), |bench| {
-            let dl = DamLev::new();
-            bench.iter(|| {
-                let i = gen.next_i();
-                let (s1, s2, d_expected) = &gen.sample[i];
-                let d_received = dl.dist(black_box(&s1), black_box(&s2));
-                (d_expected, d_received);
-            })
-        });
-
-        criterion.bench_function(&format!("strsim / damlev / len={}", len), |bench| {
-            bench.iter(|| {
-                let i = gen.next_i();
-                let (s1, s2, d_expected) = &gen.sample[i];
-                let d_received = strsim::damerau_levenshtein(black_box(&s1), black_box(&s2));
-                (d_expected, d_received);
-            })
-        });
-
-        criterion.bench_function(&format!("distance / damlev / len={}", len), |bench| {
-            bench.iter(|| {
-                let i = gen.next_i();
-                let (s1, s2, d_expected) = &gen.sample[i];
-                let d_received = distance::damerau_levenshtein(black_box(&s1), black_box(&s2));
-                (d_expected, d_received);
-            })
-        });
-    }
-}
-
-
-criterion_group!(benches, criterion_benchmark);
-criterion_main!(benches);

@@ -11,9 +11,9 @@ const MATRIX_SIZE: usize = MAX_CHARS + 2;
 
 pub struct DamLev {
     state: RefCell<(
-        String,
-        String,
-        [u8; MATRIX_SIZE * MATRIX_SIZE],
+        Vec<char>,
+        Vec<char>,
+        Vec<u8>,
         HashMap<char, usize>,
     )>,
 }
@@ -21,7 +21,7 @@ pub struct DamLev {
 
 impl DamLev {
     pub fn new() -> Self {
-        let mut dists = [0u8; MATRIX_SIZE * MATRIX_SIZE];
+        let mut dists = vec![0u8; MATRIX_SIZE * MATRIX_SIZE];
         for i in 0..MATRIX_SIZE {
             dists[ix(i, 0)] = MAX_CHARS as u8 * 2;
             dists[ix(0, i)] = MAX_CHARS as u8 * 2;
@@ -29,8 +29,8 @@ impl DamLev {
             dists[ix(i, 1)] = i as u8 - 1;
             dists[ix(1, i)] = i as u8 - 1;
         }
-        let word1 = String::with_capacity(MAX_CHARS);
-        let word2 = String::with_capacity(MAX_CHARS);
+        let word1 = Vec::with_capacity(MAX_CHARS);
+        let word2 = Vec::with_capacity(MAX_CHARS);
         let last_i1 = HashMap::with_capacity(MAX_CHARS);
         let state = RefCell::new((word1, word2, dists, last_i1));
         DamLev { state }
@@ -39,11 +39,10 @@ impl DamLev {
     pub fn dist(&self, s1: &str, s2: &str) -> usize {
         self.build_matrix(s1, s2);
         let (word1, word2, dists, ..) = &*self.state.borrow();
-        let len1 = word1.chars().count();
-        let len2 = word2.chars().count();
+        let len1 = word1.len();
+        let len2 = word2.len();
         dists[ix(len1 + 1, len2 + 1)] as usize
     }
-
 
     fn build_matrix(&self, s1: &str, s2: &str) -> () {
         let (word1, word2, dists, last_i1) = &mut *self.state.borrow_mut();
@@ -54,10 +53,12 @@ impl DamLev {
         for c in s1.chars().take(MAX_CHARS) { word1.push(c); }
         for c in s2.chars().take(MAX_CHARS) { word2.push(c); }
 
-        for (i1, char1) in word1.chars().enumerate() {
+        for i1 in 0..word1.len() {
+            let char1 = word1[i1];
             let mut l2 = 0;
 
-            for (i2, char2) in word2.chars().enumerate() {
+            for i2 in 0..word2.len() {
+                let char2 = word2[i2];
                 let l1 = *last_i1.get(&char2).unwrap_or(&0);
 
                 dists[ix(i1 + 2, i2 + 2)] = min4(
@@ -94,13 +95,12 @@ fn ix(i: usize, j: usize) -> usize {
 impl fmt::Display for DamLev {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (word1, word2, dists, ..) = &*self.state.borrow();
-        let len1 = word1.chars().count();
-        let line = "─".repeat((len1 + 1) * 3);
+        let line = "─".repeat((word1.len() + 1) * 3);
 
         // header
         write!(f, "┌───┬{}┐\n", line)?;
         write!(f, "│   │   ")?;
-        for char1 in word1.chars() {
+        for char1 in word1 {
             write!(f, " {} ", char1)?;
         }
         write!(f, "│\n")?;
@@ -108,15 +108,16 @@ impl fmt::Display for DamLev {
 
         // first row
         write!(f, "│   │")?;
-        for col in 1..len1 + 2 {
+        for col in 1..word1.len() + 2 {
             write!(f, "{:>2} ", dists[ix(col, 1)].to_string())?;
         }
         write!(f, "│\n")?;
 
         // rest rows
-        for (row, char2) in word2.chars().enumerate() {
+        for row in 0..word2.len() {
+            let char2 = word2[row];
             write!(f, "│ {} │", char2)?;
-            for col in 1..len1 + 2 {
+            for col in 1..word1.len() + 2 {
                 write!(f, "{:>2} ", dists[ix(col, row + 2)].to_string())?;
             }
             write!(f, "│\n")?;
