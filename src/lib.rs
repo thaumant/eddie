@@ -1,5 +1,5 @@
-pub mod leven;
-pub mod damlev;
+mod levenshtein;
+mod damerau_levenshtein;
 
-pub use leven::Leven;
-pub use damlev::DamLev;
+pub use levenshtein::Levenshtein;
+pub use damerau_levenshtein::DamerauLevenshtein;

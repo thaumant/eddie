@@ -1,5 +1,5 @@
 use rand::Rng;
-use eddie::damlev::DamLev;
+use eddie::DamerauLevenshtein;
 use rand::rngs::ThreadRng;
 use std::time::Duration;
 use distance;
@@ -13,9 +13,9 @@ use criterion::{
 };
 
 
-pub fn damlev_benchmark(cr: &mut Criterion) {
-    let dl = DamLev::new();
-    let mut group = cr.benchmark_group("damlev");
+pub fn damerau_levenshtein_benchmark(cr: &mut Criterion) {
+    let dl = DamerauLevenshtein::new();
+    let mut group = cr.benchmark_group("damerau_levenshtein");
 
     for size in &[3, 6, 12, 15] {
         let mut gen = Generator::new(*size, 2);
@@ -63,7 +63,7 @@ criterion_group!{
     config = Criterion::default()
                 .warm_up_time(Duration::from_millis(500))
                 .measurement_time(Duration::from_millis(1000));
-    targets = damlev_benchmark
+    targets = damerau_levenshtein_benchmark
 }
 
 criterion_main!(benches);
@@ -74,7 +74,7 @@ const GEN_SAMPLE_SIZE: usize = 100;
 
 struct Generator {
     pub sample: Vec<(String, String, usize)>,
-    dl: DamLev,
+    dl: DamerauLevenshtein,
     rng: ThreadRng,
     len: usize,
     edits: usize,
@@ -87,7 +87,7 @@ impl Generator {
     pub fn new(len: usize, edits: usize) -> Generator {
         let chars = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let rng = rand::thread_rng();
-        let dl = DamLev::new();
+        let dl = DamerauLevenshtein::new();
         let sample = Vec::with_capacity(GEN_SAMPLE_SIZE);
         let i = 0;
         let mut gen = Generator { dl, rng, len, edits, chars, sample, i };

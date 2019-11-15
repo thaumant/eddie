@@ -1,8 +1,8 @@
 use rand::Rng;
-use eddie::leven::Leven;
+use eddie::Levenshtein;
 use rand::rngs::ThreadRng;
 use std::time::Duration;
-// use distance;
+use distance;
 use strsim;
 
 use criterion::{
@@ -13,9 +13,9 @@ use criterion::{
 };
 
 
-pub fn leven_benchmark(cr: &mut Criterion) {
-    let lv = Leven::new();
-    let mut group = cr.benchmark_group("leven");
+pub fn levenshtein_benchmark(cr: &mut Criterion) {
+    let lv = Levenshtein::new();
+    let mut group = cr.benchmark_group("levenshtein");
 
     for size in &[3, 6, 12, 15] {
         let mut gen = Generator::new(*size, 2);
@@ -63,7 +63,7 @@ criterion_group!{
     config = Criterion::default()
                 .warm_up_time(Duration::from_millis(500))
                 .measurement_time(Duration::from_millis(1000));
-    targets = leven_benchmark
+    targets = levenshtein_benchmark
 }
 
 criterion_main!(benches);
@@ -74,7 +74,7 @@ const GEN_SAMPLE_SIZE: usize = 100;
 
 struct Generator {
     pub sample: Vec<(String, String, usize)>,
-    lv: Leven,
+    lv: Levenshtein,
     rng: ThreadRng,
     len: usize,
     edits: usize,
@@ -87,7 +87,7 @@ impl Generator {
     pub fn new(len: usize, edits: usize) -> Generator {
         let chars = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let rng = rand::thread_rng();
-        let lv = Leven::new();
+        let lv = Levenshtein::new();
         let sample = Vec::with_capacity(GEN_SAMPLE_SIZE);
         let i = 0;
         let mut gen = Generator { lv, rng, len, edits, chars, sample, i };

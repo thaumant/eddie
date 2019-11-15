@@ -8,7 +8,7 @@ const MAX_CHARS: usize = 20;
 const BUFFER_SIZE: usize = MAX_CHARS + 1;
 
 
-pub struct Leven {
+pub struct Levenshtein {
     state: RefCell<(
         Vec<char>,
         Vec<char>,
@@ -17,13 +17,13 @@ pub struct Leven {
 }
 
 
-impl Leven {
+impl Levenshtein {
     pub fn new() -> Self {
         let cache = vec![0u8; BUFFER_SIZE];
         let word1 = Vec::with_capacity(MAX_CHARS);
         let word2 = Vec::with_capacity(MAX_CHARS);
         let state = RefCell::new((word1, word2, cache));
-        Leven { state }
+        Levenshtein { state }
     }
 
     pub fn dist(&self, s1: &str, s2: &str) -> usize {

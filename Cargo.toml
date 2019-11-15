@@ -13,9 +13,9 @@ strsim = "0.9"
 rand = "0.7"
 
 [[bench]]
-name = "damlev"
+name = "damerau_levenshtein"
 harness = false
 
 [[bench]]
-name = "leven"
+name = "levenshtein"
 harness = false

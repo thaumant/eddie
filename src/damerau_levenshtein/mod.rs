@@ -9,7 +9,7 @@ const MAX_CHARS: usize = 20;
 const MATRIX_SIZE: usize = MAX_CHARS + 2;
 
 
-pub struct DamLev {
+pub struct DamerauLevenshtein {
     state: RefCell<(
         Vec<char>,
         Vec<char>,
@@ -19,7 +19,7 @@ pub struct DamLev {
 }
 
 
-impl DamLev {
+impl DamerauLevenshtein {
     pub fn new() -> Self {
         let mut dists = vec![0u8; MATRIX_SIZE * MATRIX_SIZE];
         for i in 0..MATRIX_SIZE {
@@ -33,7 +33,7 @@ impl DamLev {
         let word2 = Vec::with_capacity(MAX_CHARS);
         let last_i1 = HashMap::with_capacity(MAX_CHARS);
         let state = RefCell::new((word1, word2, dists, last_i1));
-        DamLev { state }
+        DamerauLevenshtein { state }
     }
 
     pub fn dist(&self, s1: &str, s2: &str) -> usize {
@@ -92,7 +92,7 @@ fn ix(i: usize, j: usize) -> usize {
 }
 
 
-impl fmt::Display for DamLev {
+impl fmt::Display for DamerauLevenshtein {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (word1, word2, dists, ..) = &*self.state.borrow();
         let line = "─".repeat((word1.len() + 1) * 3);
