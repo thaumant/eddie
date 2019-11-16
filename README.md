@@ -15,7 +15,7 @@
 | strsim   |  0.9 μs |  1.7 μs |  5.1 μs |   6.9 μs |
 | distance |  1.6 μs |  2.8 μs |  7.2 μs |   9.6 μs |
 
-### Jaro
+### Jaro and Jaro-Winkler
 
 |        |  3 chars |  6 chars |  9 chars | 12 chars |
 | :----- | -------: | -------: | -------: | -------: |

@@ -8,17 +8,17 @@ const MAX_CHARS: usize = 20;
 
 
 pub struct Jaro {
-    state: RefCell<State>,
+    pub state: RefCell<JaroState>,
 }
 
 
-struct State {
-    m:        usize,
-    t:        usize,
-    word1:    Vec<char>,
-    word2:    Vec<char>,
-    matches1: Vec<bool>,
-    matches2: Vec<bool>,
+pub struct JaroState {
+    pub m:     usize,
+    pub t:     usize,
+    pub word1: Vec<char>,
+    pub word2: Vec<char>,
+    matches1:  Vec<bool>,
+    matches2:  Vec<bool>,
 }
 
 
@@ -30,13 +30,13 @@ impl Jaro {
         let matches2 = vec![false; MAX_CHARS];
         let m = 0;
         let t = 0;
-        let state = State { m, t, word1, word2, matches1, matches2 };
+        let state = JaroState { m, t, word1, word2, matches1, matches2 };
         Jaro { state: RefCell::new(state) }
     }
 
     pub fn dist(&self, str1: &str, str2: &str) -> f64 {
         let state = &mut *self.state.borrow_mut();
-        let State { m, t, word1, word2, matches1, matches2 } = state;
+        let JaroState { m, t, word1, word2, matches1, matches2 } = state;
 
         *m = 0usize; // matches
         *t = 0usize; // transpositions
