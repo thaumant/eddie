@@ -1,191 +1,162 @@
 use super::{Levenshtein, DEFAULT_CAPACITY};
 
+fn floor3(num: f64) -> f64 {
+    let p = 10usize.pow(3) as f64;
+    (num * p).floor() / p
+}
+
 #[test]
 fn equality() {
-    let lv = Levenshtein::new();
+    let lev = Levenshtein::new();
     let sample = [
         "",
-        "c",
-        "ca",
-        "cap",
-        "capt",
-        "capta",
-        "captai",
-        "captain",
+        "m",
+        "ma",
+        "mai",
+        "mail",
+        "mailb",
+        "mailbo",
+        "mailbox",
     ];
     for s in sample.iter() {
-        assert_eq!(lv.dist(s, s), 0);
+        assert_eq!(lev.distance(s, s), 0);
     }
 }
 
 #[test]
 fn prefix() {
-    let lv = Levenshtein::new();
-    let s1 = "captain";
+    let lev = Levenshtein::new();
     let sample = [
-        (1, "captai"),
-        (2, "capta"),
-        (3, "capt"),
-        (4, "cap"),
-        (5, "ca"),
-        (6, "c"),
-        (7, ""),
+        (1, "mailbox", "mailbo"),
+        (2, "mailbox", "mailb"),
+        (3, "mailbox", "mail"),
+        (4, "mailbox", "mai"),
+        (5, "mailbox", "ma"),
+        (6, "mailbox", "m"),
+        (7, "mailbox", ""),
     ];
-    for (d, s2) in sample.iter() {
-        dbg!((s1, s2, d));
-        assert_eq!(lv.dist(s1, s2), *d);
-        assert_eq!(lv.dist(s2, s1), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(lev.distance(s1, s2), *d);
+        assert_eq!(lev.distance(s2, s1), *d);
     }
 }
 
 #[test]
-fn del_continuous() {
-    let lv = Levenshtein::new();
-    let s2 = "captain";
+fn add_del_continuous() {
+    let lev = Levenshtein::new();
     let sample = [
-        (1, "_captain"),
-        (2, "__captain"),
-        (3, "___captain"),
-        (4, "____captain"),
+        (1, "mailbox", "_mailbox"),
+        (2, "mailbox", "__mailbox"),
+        (3, "mailbox", "___mailbox"),
+        (4, "mailbox", "____mailbox"),
 
-        (1, "cap_tain"),
-        (2, "cap__tain"),
-        (3, "cap___tain"),
-        (4, "cap____tain"),
+        (1, "mailbox", "mail_box"),
+        (2, "mailbox", "mail__box"),
+        (3, "mailbox", "mail___box"),
+        (4, "mailbox", "mail____box"),
 
-        (1, "captain_"),
-        (2, "captain__"),
-        (3, "captain___"),
-        (4, "captain____"),
+        (1, "mailbox", "mailbox_"),
+        (2, "mailbox", "mailbox__"),
+        (3, "mailbox", "mailbox___"),
+        (4, "mailbox", "mailbox____"),
     ];
-    for (d, s1) in sample.iter() {
-        assert_eq!(lv.dist(s1, s2), *d);
-    }
-}
-
-#[test]
-fn add_continuous() {
-    let lv = Levenshtein::new();
-    let s1 = "captain";
-    let sample = [
-        (1, "_captain"),
-        (2, "__captain"),
-        (3, "___captain"),
-        (4, "____captain"),
-
-        (1, "cap_tain"),
-        (2, "cap__tain"),
-        (3, "cap___tain"),
-        (4, "cap____tain"),
-
-        (1, "captain_"),
-        (2, "captain__"),
-        (3, "captain___"),
-        (4, "captain____"),
-    ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(lv.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(lev.distance(s1, s2), *d);
+        assert_eq!(lev.distance(s2, s1), *d);
     }
 }
 
 #[test]
 fn sub_continuous() {
-    let lv = Levenshtein::new();
-    let s1 = "captain";
+    let lev = Levenshtein::new();
     let sample = [
-        (1, "_aptain"),
-        (2, "__ptain"),
-        (3, "___tain"),
-        (4, "____ain"),
+        (1, "mailbox", "_ailbox"),
+        (2, "mailbox", "__ilbox"),
+        (3, "mailbox", "___lbox"),
+        (4, "mailbox", "____box"),
 
-        (1, "cap_ain"),
-        (2, "cap__in"),
-        (3, "ca___in"),
-        (4, "ca____n"),
+        (1, "mailbox", "mai_box"),
+        (2, "mailbox", "mai__ox"),
+        (3, "mailbox", "ma___ox"),
+        (4, "mailbox", "ma____x"),
 
-        (1, "captai_"),
-        (2, "capta__"),
-        (3, "capt___"),
-        (4, "cap____"),
+        (1, "mailbox", "mailbo_"),
+        (2, "mailbox", "mailb__"),
+        (3, "mailbox", "mail___"),
+        (4, "mailbox", "mai____"),
     ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(lv.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(lev.distance(s1, s2), *d);
     }
 }
 
 #[test]
-fn del_intermittent() {
-    let lv = Levenshtein::new();
-    let s2 = "captain";
+fn add_del_intermittent() {
+    let lev = Levenshtein::new();
     let sample = [
-        (1, "_captain"),
-        (2, "_c_aptain"),
-        (3, "_c_a_ptain"),
-        (4, "_c_a_p_tain"),
+        (1, "mailbox", "_mailbox"),
+        (2, "mailbox", "_m_ailbox"),
+        (3, "mailbox", "_m_a_ilbox"),
+        (4, "mailbox", "_m_a_i_lbox"),
 
-        (1, "captain_"),
-        (2, "captai_n_"),
-        (3, "capta_i_n_"),
-        (4, "capt_a_i_n_"),
+        (1, "mailbox", "mailbox_"),
+        (2, "mailbox", "mailbo_x_"),
+        (3, "mailbox", "mailb_o_x_"),
+        (4, "mailbox", "mail_b_o_x_"),
     ];
-    for (d, s1) in sample.iter() {
-        assert_eq!(lv.dist(s1, s2), *d);
-    }
-}
-
-#[test]
-fn add_intermittent() {
-    let lv = Levenshtein::new();
-    let s1 = "captain";
-    let sample = [
-        (1, "_captain"),
-        (2, "_c_aptain"),
-        (3, "_c_a_ptain"),
-        (4, "_c_a_p_tain"),
-
-        (1, "captain_"),
-        (2, "captai_n_"),
-        (3, "capta_i_n_"),
-        (4, "capt_a_i_n_"),
-    ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(lv.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(lev.distance(s1, s2), *d);
+        assert_eq!(lev.distance(s2, s1), *d);
     }
 }
 
 #[test]
 fn sub_intermittent() {
-    let lv = Levenshtein::new();
-    let s1 = "captain";
+    let lev = Levenshtein::new();
     let sample = [
-        (1, "_aptain"),
-        (2, "_a_tain"),
-        (3, "_a_t_in"),
+        (1, "mailbox", "_ailbox"),
+        (2, "mailbox", "_a_lbox"),
+        (3, "mailbox", "_a_l_ox"),
 
-        (1, "captai_"),
-        (2, "capt_i_"),
-        (3, "ca_t_i_"),
+        (1, "mailbox", "mailbo_"),
+        (2, "mailbox", "mail_o_"),
+        (3, "mailbox", "ma_l_o_"),
     ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(lv.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(lev.distance(s1, s2), *d);
+    }
+}
+
+#[test]
+fn mixed() {
+    let lev = Levenshtein::new();
+    let sample = [
+        (3, "ca", "abc"),
+        (3, "a tc", "a cat"),
+        (4, "a cat", "an abct"),
+        (3, "mailbox", "alimbox"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(lev.distance(s1, s2), *d);
+        assert_eq!(lev.distance(s2, s1), *d);
     }
 }
 
 #[test]
 fn growth() {
-    let lv = Levenshtein::new();
+    let lev = Levenshtein::new();
 
     for len in 0 .. DEFAULT_CAPACITY * 2 {
         let s1 = &"a".repeat(len);
         let s2 = &"b".repeat(len);
-        assert_eq!(lv.dist(s1, s1), 0);
-        assert_eq!(lv.dist(s1, s2), len);
+        assert_eq!(lev.distance(s1, s1), 0);
+        assert_eq!(lev.distance(s1, s2), len);
     }
 }
 
 #[test]
 fn utf_multibyte() {
-    let lv = Levenshtein::new();
+    let lev = Levenshtein::new();
     let s1 = "もしもし";
     let sample= [
         (1, "もしもしし"),
@@ -197,6 +168,40 @@ fn utf_multibyte() {
         (4, ""),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(lv.dist(s1, s2), *d);
+        assert_eq!(lev.distance(s1, s2), *d);
+    }
+}
+
+#[test]
+fn rel_dist() {
+    let lev = Levenshtein::new();
+    let sample = [
+        (0.000, "",        ""),
+        (1.000, "mailbox", ""),
+        (0.428, "mailbox", "mail"),
+        (0.222, "mailbox", "mail__box"),
+        (0.571, "mailbox", "____box"),
+        (0.571, "mailbox", "amliobx"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(floor3(lev.rel_dist(s1, s2)), *d);
+        assert_eq!(floor3(lev.rel_dist(s2, s1)), *d);
+    }
+}
+
+#[test]
+fn similarity() {
+    let lev = Levenshtein::new();
+    let sample = [
+        (1.000, "",        ""),
+        (0.000, "mailbox", ""),
+        (0.571, "mailbox", "mail"),
+        (0.777, "mailbox", "mail__box"),
+        (0.428, "mailbox", "____box"),
+        (0.428, "mailbox", "amliobx"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(floor3(lev.similarity(s1, s2)), *d);
+        assert_eq!(floor3(lev.similarity(s2, s1)), *d);
     }
 }

@@ -28,7 +28,7 @@ pub fn leven_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    leven.dist(s1, s2)
+                    leven.distance(s1, s2)
                 });
             }
         );
@@ -141,7 +141,7 @@ impl Generator {
         for _ in 0..GEN_SAMPLE_SIZE {
             let w1 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
-            let d = self.lv.dist(&w1, &w2);
+            let d = self.lv.distance(&w1, &w2);
             self.sample.push((w1, w2, d));
         }
         self

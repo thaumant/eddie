@@ -1,8 +1,8 @@
 use super::{Jaro, DEFAULT_CAPATITY};
 
 
-fn pfloor(num: f64, presision: u32) -> f64 {
-    let p = 10usize.pow(presision) as f64;
+fn floor3(num: f64) -> f64 {
+    let p = 10usize.pow(3) as f64;
     (num * p).floor() / p
 }
 
@@ -21,7 +21,7 @@ fn equality() {
         (1., "mailbox"),
     ];
     for (d, s) in sample.iter() {
-        assert_eq!(jaro.dist(s, s), *d);
+        assert_eq!(jaro.similarity(s, s), *d);
     }
 }
 
@@ -37,7 +37,7 @@ fn inequality() {
         (0., "aaaaa", "bbbbb"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(jaro.dist(s1, s2), *d);
+        assert_eq!(jaro.similarity(s1, s2), *d);
     }
 }
 
@@ -52,10 +52,11 @@ fn prefix() {
         (0.809, "mailbox", "mai"),
         (0.761, "mailbox", "ma"),
         (0.714, "mailbox", "m"),
+        (0.000, "mailbox", ""),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -70,10 +71,11 @@ fn postfix() {
         (0.000, "mailbox", "box"),
         (0.000, "mailbox", "ox"),
         (0.000, "mailbox", "x"),
+        (0.000, "mailbox", ""),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -91,8 +93,8 @@ fn match_distance() {
         (0.000, "mailbox", "......l"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -122,8 +124,8 @@ fn add_del_continuous() {
         (0.846, "mailbox", "mailbox......"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -146,8 +148,8 @@ fn sub_continuous() {
         (0.904, "mailbox", ".ailbox"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -173,8 +175,8 @@ fn add_del_intermittent() {
         (0.958, "mailbox", ".mailbox"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -192,8 +194,8 @@ fn sub_intermittent() {
         (0.904, "mailbox", ".ailbox"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -217,8 +219,8 @@ fn transpose() {
         (0.833, "mailbox", "imabxlo"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -237,9 +239,8 @@ fn utf_multibyte() {
         (0.000, "もしもし", ""),
     ];
     for (d, s1, s2) in sample.iter() {
-        dbg!(s2);
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -255,8 +256,8 @@ fn mixed() {
         (0.896, "jellyfish", "smellyfish"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(pfloor(jaro.dist(s1, s2), 3), *d);
-        assert_eq!(pfloor(jaro.dist(s2, s1), 3), *d);
+        assert_eq!(floor3(jaro.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jaro.similarity(s2, s1)), *d);
     }
 }
 
@@ -268,7 +269,27 @@ fn growth() {
     for len in 1 .. DEFAULT_CAPATITY * 2 {
         let s1 = &"a".repeat(len);
         let s2 = &"b".repeat(len);
-        assert_eq!(jaro.dist(s1, s1), 1.0);
-        assert_eq!(jaro.dist(s1, s2), 0.0);
+        assert_eq!(jaro.similarity(s1, s1), 1.0);
+        assert_eq!(jaro.similarity(s1, s2), 0.0);
+    }
+}
+
+
+#[test]
+fn rel_dist() {
+    let jaro = Jaro::new();
+    let sample = [
+        (0.000, "",        ""),
+        (1.000, "mailbox", ""),
+        (0.142, "mailbox", "mail"),
+        (0.095, "mailbox", "ilbox"),
+        (0.571, "mailbox", "..l...."),
+        (0.121, "mailbox", "....mailbox"),
+        (0.285, "mailbox", "mail..."),
+        (0.095, "mailbox", "amlibox"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(floor3(jaro.rel_dist(s1, s2)), *d);
+        assert_eq!(floor3(jaro.rel_dist(s2, s1)), *d);
     }
 }

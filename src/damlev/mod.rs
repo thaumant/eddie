@@ -11,6 +11,7 @@ use matrix::Matrix;
 
 const DEFAULT_CAPACITY: usize = 20;
 
+
 struct State {
     word1:   Vec<char>,
     word2:   Vec<char>,
@@ -34,7 +35,7 @@ impl DamerauLevenshtein {
         DamerauLevenshtein { state: RefCell::new(state) }
     }
 
-    pub fn dist(&self, s1: &str, s2: &str) -> usize {
+    pub fn distance(&self, s1: &str, s2: &str) -> usize {
         let State { word1, word2, dists, last_i1 } = &mut *self.state.borrow_mut();
 
         last_i1.clear();
@@ -68,5 +69,16 @@ impl DamerauLevenshtein {
 
         let dist = unsafe { *dists.ix(len1 + 1, len2 + 1) };
         dist as usize
+    }
+
+    pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
+        let dist = self.distance(str1, str2);
+        let State { word1, word2, .. } = &*self.state.borrow_mut();
+        let len = max!(1, word1.len(), word2.len());
+        dist as f64 / len as f64
+    }
+
+    pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
+        1.0 - self.rel_dist(str1, str2)
     }
 }

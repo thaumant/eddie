@@ -1,206 +1,146 @@
 use super::{DamerauLevenshtein, DEFAULT_CAPACITY};
 
+fn floor3(num: f64) -> f64 {
+    let p = 10usize.pow(3) as f64;
+    (num * p).floor() / p
+}
+
 #[test]
 fn equality() {
     let damlev = DamerauLevenshtein::new();
     let sample = [
         "",
-        "c",
-        "ca",
-        "cap",
-        "capt",
-        "capta",
-        "captai",
-        "captain",
+        "m",
+        "ma",
+        "mai",
+        "mail",
+        "mailb",
+        "mailbo",
+        "mailbox",
     ];
     for s in sample.iter() {
-        assert_eq!(damlev.dist(s, s), 0);
+        assert_eq!(damlev.distance(s, s), 0);
     }
 }
 
 #[test]
 fn prefix() {
     let damlev = DamerauLevenshtein::new();
-    let s1 = "captain";
     let sample = [
-        (1, "captai"),
-        (2, "capta"),
-        (3, "capt"),
-        (4, "cap"),
-        (5, "ca"),
-        (6, "c"),
-        (7, ""),
+        (1, "mailbox", "mailbo"),
+        (2, "mailbox", "mailb"),
+        (3, "mailbox", "mail"),
+        (4, "mailbox", "mai"),
+        (5, "mailbox", "ma"),
+        (6, "mailbox", "m"),
+        (7, "mailbox", ""),
     ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
-        assert_eq!(damlev.dist(s2, s1), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(damlev.distance(s1, s2), *d);
+        assert_eq!(damlev.distance(s2, s1), *d);
     }
 }
 
 #[test]
-fn del_continuous() {
+fn add_del_continuous() {
     let damlev = DamerauLevenshtein::new();
-    let s2 = "captain";
     let sample = [
-        (1, "_captain"),
-        (2, "__captain"),
-        (3, "___captain"),
-        (4, "____captain"),
+        (1, "mailbox", "_mailbox"),
+        (2, "mailbox", "__mailbox"),
+        (3, "mailbox", "___mailbox"),
+        (4, "mailbox", "____mailbox"),
 
-        (1, "cap_tain"),
-        (2, "cap__tain"),
-        (3, "cap___tain"),
-        (4, "cap____tain"),
+        (1, "mailbox", "mail_box"),
+        (2, "mailbox", "mail__box"),
+        (3, "mailbox", "mail___box"),
+        (4, "mailbox", "mail____box"),
 
-        (1, "captain_"),
-        (2, "captain__"),
-        (3, "captain___"),
-        (4, "captain____"),
+        (1, "mailbox", "mailbox_"),
+        (2, "mailbox", "mailbox__"),
+        (3, "mailbox", "mailbox___"),
+        (4, "mailbox", "mailbox____"),
     ];
-    for (d, s1) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
-    }
-}
-
-#[test]
-fn add_continuous() {
-    let damlev = DamerauLevenshtein::new();
-    let s1 = "captain";
-    let sample = [
-        (1, "_captain"),
-        (2, "__captain"),
-        (3, "___captain"),
-        (4, "____captain"),
-
-        (1, "cap_tain"),
-        (2, "cap__tain"),
-        (3, "cap___tain"),
-        (4, "cap____tain"),
-
-        (1, "captain_"),
-        (2, "captain__"),
-        (3, "captain___"),
-        (4, "captain____"),
-    ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(damlev.distance(s1, s2), *d);
+        assert_eq!(damlev.distance(s2, s1), *d);
     }
 }
 
 #[test]
 fn sub_continuous() {
     let damlev = DamerauLevenshtein::new();
-    let s1 = "captain";
     let sample = [
-        (1, "_aptain"),
-        (2, "__ptain"),
-        (3, "___tain"),
-        (4, "____ain"),
+        (1, "mailbox", "_ailbox"),
+        (2, "mailbox", "__ilbox"),
+        (3, "mailbox", "___lbox"),
+        (4, "mailbox", "____box"),
 
-        (1, "cap_ain"),
-        (2, "cap__in"),
-        (3, "ca___in"),
-        (4, "ca____n"),
+        (1, "mailbox", "mai_box"),
+        (2, "mailbox", "mai__ox"),
+        (3, "mailbox", "ma___ox"),
+        (4, "mailbox", "ma____x"),
 
-        (1, "captai_"),
-        (2, "capta__"),
-        (3, "capt___"),
-        (4, "cap____"),
+        (1, "mailbox", "mailbo_"),
+        (2, "mailbox", "mailb__"),
+        (3, "mailbox", "mail___"),
+        (4, "mailbox", "mai____"),
     ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(damlev.distance(s1, s2), *d);
     }
 }
 
 #[test]
 fn trans_continuous() {
     let damlev = DamerauLevenshtein::new();
-    let s1 = "captain";
     let sample = [
-        (1, "acptain"),
-        (2, "actpain"),
-        (3, "actpian"),
+        (1, "mailbox", "amilbox"),
+        (2, "mailbox", "amlibox"),
+        (3, "mailbox", "amliobx"),
 
-        (1, "captani"),
-        (2, "capatni"),
-        (3, "cpaatni"),
+        (1, "mailbox", "mailbxo"),
+        (2, "mailbox", "maiblxo"),
+        (3, "mailbox", "miablxo"),
     ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(damlev.distance(s1, s2), *d);
     }
 }
 
 #[test]
-fn del_intermittent() {
+fn add_del_intermittent() {
     let damlev = DamerauLevenshtein::new();
-    let s2 = "captain";
     let sample = [
-        (1, "_captain"),
-        (2, "_c_aptain"),
-        (3, "_c_a_ptain"),
-        (4, "_c_a_p_tain"),
+        (1, "mailbox", "_mailbox"),
+        (2, "mailbox", "_m_ailbox"),
+        (3, "mailbox", "_m_a_ilbox"),
+        (4, "mailbox", "_m_a_i_lbox"),
 
-        (1, "captain_"),
-        (2, "captai_n_"),
-        (3, "capta_i_n_"),
-        (4, "capt_a_i_n_"),
+        (1, "mailbox", "mailbox_"),
+        (2, "mailbox", "mailbo_x_"),
+        (3, "mailbox", "mailb_o_x_"),
+        (4, "mailbox", "mail_b_o_x_"),
     ];
-    for (d, s1) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
-    }
-}
-
-#[test]
-fn add_intermittent() {
-    let damlev = DamerauLevenshtein::new();
-    let s1 = "captain";
-    let sample = [
-        (1, "_captain"),
-        (2, "_c_aptain"),
-        (3, "_c_a_ptain"),
-        (4, "_c_a_p_tain"),
-
-        (1, "captain_"),
-        (2, "captai_n_"),
-        (3, "capta_i_n_"),
-        (4, "capt_a_i_n_"),
-    ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(damlev.distance(s1, s2), *d);
+        assert_eq!(damlev.distance(s2, s1), *d);
     }
 }
 
 #[test]
 fn sub_intermittent() {
     let damlev = DamerauLevenshtein::new();
-    let s1 = "captain";
     let sample = [
-        (1, "_aptain"),
-        (2, "_a_tain"),
-        (3, "_a_t_in"),
+        (1, "mailbox", "_ailbox"),
+        (2, "mailbox", "_a_lbox"),
+        (3, "mailbox", "_a_l_ox"),
 
-        (1, "captai_"),
-        (2, "capt_i_"),
-        (3, "ca_t_i_"),
+        (1, "mailbox", "mailbo_"),
+        (2, "mailbox", "mail_o_"),
+        (3, "mailbox", "ma_l_o_"),
     ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
-    }
-}
-
-#[test]
-fn trans_intermittent() {
-    let damlev = DamerauLevenshtein::new();
-    let s1 = "captain";
-    let sample = [
-        (1, "acptain"),
-        (2, "acpatin"),
-
-        (1, "captani"),
-        (2, "catpani"),
-    ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(damlev.distance(s1, s2), *d);
     }
 }
 
@@ -211,11 +151,11 @@ fn mixed() {
         (2, "ca", "abc"),
         (2, "a tc", "a cat"),
         (3, "a cat", "an abct"),
-        (3, "captain", "atpcain"),
+        (3, "mailbox", "alimbox"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
-        assert_eq!(damlev.dist(s2, s1), *d);
+        assert_eq!(damlev.distance(s1, s2), *d);
+        assert_eq!(damlev.distance(s2, s1), *d);
     }
 }
 
@@ -226,9 +166,9 @@ fn growth() {
     for len in DEFAULT_CAPACITY + 1 .. DEFAULT_CAPACITY * 2 {
         let s1 = &"a".repeat(len);
         let s2 = &"b".repeat(len);
-        assert_eq!(damlev.dist(s1, s1), 0);
-        assert_eq!(damlev.dist(s1, ""), len);
-        assert_eq!(damlev.dist(s1, s2), len);
+        assert_eq!(damlev.distance(s1, s1), 0);
+        assert_eq!(damlev.distance(s1, ""), len);
+        assert_eq!(damlev.distance(s1, s2), len);
     }
 }
 
@@ -247,6 +187,40 @@ fn utf_multibyte() {
         (4, ""),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(damlev.dist(s1, s2), *d);
+        assert_eq!(damlev.distance(s1, s2), *d);
+    }
+}
+
+#[test]
+fn rel_dist() {
+    let damlev = DamerauLevenshtein::new();
+    let sample = [
+        (0.000, "",        ""),
+        (1.000, "mailbox", ""),
+        (0.428, "mailbox", "mail"),
+        (0.222, "mailbox", "mail__box"),
+        (0.571, "mailbox", "____box"),
+        (0.428, "mailbox", "amliobx"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(floor3(damlev.rel_dist(s1, s2)), *d);
+        assert_eq!(floor3(damlev.rel_dist(s2, s1)), *d);
+    }
+}
+
+#[test]
+fn similarity() {
+    let damlev = DamerauLevenshtein::new();
+    let sample = [
+        (1.000, "",        ""),
+        (0.000, "mailbox", ""),
+        (0.571, "mailbox", "mail"),
+        (0.777, "mailbox", "mail__box"),
+        (0.428, "mailbox", "____box"),
+        (0.571, "mailbox", "amliobx"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(floor3(damlev.similarity(s1, s2)), *d);
+        assert_eq!(floor3(damlev.similarity(s2, s1)), *d);
     }
 }

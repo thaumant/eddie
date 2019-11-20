@@ -24,7 +24,7 @@ pub fn jarwin_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
-                    jarwin.dist(s1, s2)
+                    jarwin.similarity(s1, s2)
                 });
             }
         );

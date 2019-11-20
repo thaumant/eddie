@@ -26,7 +26,7 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    dl.dist(s1, s2)
+                    dl.distance(s1, s2)
                 });
             }
         );
@@ -117,7 +117,7 @@ impl Generator {
         for _ in 0..GEN_SAMPLE_SIZE {
             let w1 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
-            let d = self.dl.dist(&w1, &w2);
+            let d = self.dl.distance(&w1, &w2);
             self.sample.push((w1, w2, d));
         }
         self

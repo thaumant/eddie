@@ -21,7 +21,7 @@ fn equality() {
         (1., "mailbox"),
     ];
     for (d, s) in &sample {
-        assert_eq!(jarwin.dist(s, s), *d);
+        assert_eq!(jarwin.similarity(s, s), *d);
     }
 }
 
@@ -37,8 +37,8 @@ fn inequality() {
         (0., "aaaaa", "bbbbb"),
     ];
     for (d, s1, s2) in &sample {
-        assert_eq!(jarwin.dist(s1, s2), *d);
-        assert_eq!(jarwin.dist(s2, s1), *d);
+        assert_eq!(jarwin.similarity(s1, s2), *d);
+        assert_eq!(jarwin.similarity(s2, s1), *d);
     }
 }
 
@@ -56,8 +56,8 @@ fn prefix() {
         (0.933, "mailbox", "mailbo"),
     ];
     for (d, s1, s2) in &sample {
-        assert_eq!(floor3(jarwin.dist(s1, s2)), *d);
-        assert_eq!(floor3(jarwin.dist(s2, s1)), *d);
+        assert_eq!(floor3(jarwin.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jarwin.similarity(s2, s1)), *d);
     }
 }
 
@@ -74,8 +74,8 @@ fn postfix() {
         (0.000, "mailbox", "x"),
     ];
     for (d, s1, s2) in &sample {
-        assert_eq!(floor3(jarwin.dist(s1, s2)), *d);
-        assert_eq!(floor3(jarwin.dist(s2, s1)), *d);
+        assert_eq!(floor3(jarwin.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jarwin.similarity(s2, s1)), *d);
     }
 }
 
@@ -93,8 +93,8 @@ fn scaling() {
         (0.866, "mailbo_", "mailbo-"),
     ];
     for (d, s1, s2) in &sample {
-        assert_eq!(floor3(jarwin.dist(s1, s2)), *d);
-        assert_eq!(floor3(jarwin.dist(s2, s1)), *d);
+        assert_eq!(floor3(jarwin.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jarwin.similarity(s2, s1)), *d);
     }
 }
 
@@ -109,7 +109,24 @@ fn mixed() {
         (0.896, "jellyfish", "smellyfish"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(floor3(jarwin.dist(s1, s2)), *d);
-        assert_eq!(floor3(jarwin.dist(s2, s1)), *d);
+        assert_eq!(floor3(jarwin.similarity(s1, s2)), *d);
+        assert_eq!(floor3(jarwin.similarity(s2, s1)), *d);
+    }
+}
+
+
+#[test]
+fn rel_dist() {
+    let jarwin = JaroWinkler::new();
+    let sample = [
+        (0.000, "",        ""),
+        (1.000, "mailbox", ""),
+        (0.200, "mailbox", "mail"),
+        (0.095, "mailbox", "ilbox"),
+        (0.104, "m_ilbox", "m-ilbox"),
+    ];
+    for (d, s1, s2) in sample.iter() {
+        assert_eq!(floor3(jarwin.rel_dist(s1, s2)), *d);
+        assert_eq!(floor3(jarwin.rel_dist(s2, s1)), *d);
     }
 }

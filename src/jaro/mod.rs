@@ -38,7 +38,7 @@ impl Jaro {
         }
     }
 
-    pub fn dist(&self, str1: &str, str2: &str) -> f64 {
+    pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
         match (str1.len(), str2.len()) {
             (0, 0) => { return 1.0; }
             (_, 0) => { return 0.0; }
@@ -106,5 +106,9 @@ impl Jaro {
         let len2 = len2 as f64;
 
         (matches/len1 + matches/len2 + ((matches - trans/2.) / matches)) / 3.
+    }
+
+    pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
+        1.0 - self.similarity(str1, str2)
     }
 }

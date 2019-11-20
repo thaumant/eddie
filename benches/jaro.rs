@@ -24,7 +24,7 @@ pub fn jaro_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
-                    jaro.dist(s1, s2)
+                    jaro.similarity(s1, s2)
                 });
             }
         );

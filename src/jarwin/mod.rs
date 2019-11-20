@@ -30,8 +30,8 @@ impl JaroWinkler {
         self
     }
 
-    pub fn dist(&self, str1: &str, str2: &str) -> f64 {
-        let jaro_dist = self.jaro.dist(str1, str2);
+    pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
+        let jaro_dist = self.jaro.similarity(str1, str2);
         if jaro_dist == 0. { return 0.; }
 
         let State { word1, word2, .. } = &*self.jaro.state.borrow();
@@ -44,5 +44,9 @@ impl JaroWinkler {
         }
 
         jaro_dist - prefix_size * scaling * (1. - jaro_dist)
+    }
+
+    pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
+        1.0 - self.similarity(str1, str2)
     }
 }
