@@ -5,7 +5,6 @@ use std::time::Duration;
 use strsim;
 
 use criterion::{
-    black_box,
     criterion_group,
     criterion_main,
     Criterion,
@@ -16,7 +15,7 @@ pub fn jaro_benchmark(cr: &mut Criterion) {
     let jaro = Jaro::new();
     let mut group = cr.benchmark_group("jaro");
 
-    for size in &[3, 6, 12, 15] {
+    for size in &[3, 6, 9, 12, 15] {
         let mut gen = Generator::new(*size, 2);
 
         group.bench_with_input(
@@ -25,7 +24,7 @@ pub fn jaro_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
-                    jaro.dist(s1, black_box(s2))
+                    jaro.dist(s1, s2)
                 });
             }
         );
@@ -36,7 +35,7 @@ pub fn jaro_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
-                    strsim::jaro(s1, black_box(s2))
+                    strsim::jaro(s1, s2)
                 });
             }
         );
@@ -49,8 +48,8 @@ pub fn jaro_benchmark(cr: &mut Criterion) {
 criterion_group!{
     name = benches;
     config = Criterion::default()
-                .warm_up_time(Duration::from_millis(500))
-                .measurement_time(Duration::from_millis(1000));
+                .warm_up_time(Duration::from_millis(20))
+                .measurement_time(Duration::from_millis(50));
     targets = jaro_benchmark
 }
 

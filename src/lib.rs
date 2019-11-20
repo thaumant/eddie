@@ -1,9 +1,10 @@
+mod utils;
 mod jaro;
-mod jaro_winkler;
-mod levenshtein;
-mod damerau_levenshtein;
+mod jarwin;
+mod leven;
+mod damlev;
 
-pub use jaro::Jaro;
-pub use jaro_winkler::JaroWinkler;
-pub use levenshtein::Levenshtein;
-pub use damerau_levenshtein::DamerauLevenshtein;
+pub use crate::jaro::Jaro;
+pub use crate::jarwin::JaroWinkler;
+pub use crate::leven::Levenshtein;
+pub use crate::damlev::DamerauLevenshtein;

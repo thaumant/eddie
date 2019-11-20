@@ -4,20 +4,22 @@ use rand::rngs::ThreadRng;
 use std::time::Duration;
 use distance;
 use strsim;
+use edit_distance;
+use natural;
+use txtdist;
 
 use criterion::{
-    black_box,
     criterion_group,
     criterion_main,
     Criterion,
 };
 
 
-pub fn levenshtein_benchmark(cr: &mut Criterion) {
-    let lv = Levenshtein::new();
-    let mut group = cr.benchmark_group("levenshtein");
+pub fn leven_benchmark(cr: &mut Criterion) {
+    let mut group = cr.benchmark_group("leven");
+    let leven = Levenshtein::new();
 
-    for size in &[3, 6, 12, 15] {
+    for size in &[3, 6, 9, 12, 15] {
         let mut gen = Generator::new(*size, 2);
 
         group.bench_with_input(
@@ -26,7 +28,7 @@ pub fn levenshtein_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    lv.dist(s1, black_box(s2));
+                    leven.dist(s1, s2)
                 });
             }
         );
@@ -37,7 +39,7 @@ pub fn levenshtein_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    strsim::levenshtein(s1, black_box(s2));
+                    strsim::levenshtein(s1, s2)
                 });
             }
         );
@@ -48,7 +50,40 @@ pub fn levenshtein_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    distance::levenshtein(s1, black_box(s2));
+                    distance::levenshtein(s1, s2)
+                });
+            }
+        );
+
+        group.bench_with_input(
+            format!("edit_distance size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2, _) = &gen.next();
+                    edit_distance::edit_distance(s1, s2)
+                });
+            }
+        );
+
+        group.bench_with_input(
+            format!("natural size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2, _) = &gen.next();
+                    natural::distance::levenshtein_distance(s1, s2)
+                });
+            }
+        );
+
+        group.bench_with_input(
+            format!("txtdist size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2, _) = &gen.next();
+                    txtdist::levenshtein(s1, s2)
                 });
             }
         );
@@ -61,9 +96,9 @@ pub fn levenshtein_benchmark(cr: &mut Criterion) {
 criterion_group!{
     name = benches;
     config = Criterion::default()
-                .warm_up_time(Duration::from_millis(500))
-                .measurement_time(Duration::from_millis(1000));
-    targets = levenshtein_benchmark
+                .warm_up_time(Duration::from_millis(20))
+                .measurement_time(Duration::from_millis(50));
+    targets = leven_benchmark
 }
 
 criterion_main!(benches);

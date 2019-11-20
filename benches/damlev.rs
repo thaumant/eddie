@@ -4,20 +4,20 @@ use rand::rngs::ThreadRng;
 use std::time::Duration;
 use distance;
 use strsim;
+use txtdist;
 
 use criterion::{
-    black_box,
     criterion_group,
     criterion_main,
     Criterion,
 };
 
 
-pub fn damerau_levenshtein_benchmark(cr: &mut Criterion) {
+pub fn damlev_benchmark(cr: &mut Criterion) {
     let dl = DamerauLevenshtein::new();
-    let mut group = cr.benchmark_group("damerau_levenshtein");
+    let mut group = cr.benchmark_group("damlev");
 
-    for size in &[3, 6, 12, 15] {
+    for size in &[3, 6, 9, 12, 15] {
         let mut gen = Generator::new(*size, 2);
 
         group.bench_with_input(
@@ -26,7 +26,7 @@ pub fn damerau_levenshtein_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    dl.dist(s1, black_box(s2));
+                    dl.dist(s1, s2)
                 });
             }
         );
@@ -37,7 +37,7 @@ pub fn damerau_levenshtein_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    strsim::damerau_levenshtein(s1, black_box(s2));
+                    strsim::damerau_levenshtein(s1, s2)
                 });
             }
         );
@@ -48,7 +48,18 @@ pub fn damerau_levenshtein_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
-                    distance::damerau_levenshtein(s1, black_box(s2));
+                    distance::damerau_levenshtein(s1, s2)
+                });
+            }
+        );
+
+        group.bench_with_input(
+            format!("txtdist size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2, _) = &gen.next();
+                    txtdist::damerau_levenshtein(s1, s2)
                 });
             }
         );
@@ -61,9 +72,9 @@ pub fn damerau_levenshtein_benchmark(cr: &mut Criterion) {
 criterion_group!{
     name = benches;
     config = Criterion::default()
-                .warm_up_time(Duration::from_millis(500))
-                .measurement_time(Duration::from_millis(1000));
-    targets = damerau_levenshtein_benchmark
+                .warm_up_time(Duration::from_millis(20))
+                .measurement_time(Duration::from_millis(50));
+    targets = damlev_benchmark
 }
 
 criterion_main!(benches);

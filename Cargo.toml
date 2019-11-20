@@ -7,17 +7,20 @@ edition = "2018"
 [dependencies]
 
 [dev-dependencies]
+edit-distance = "2.1.0"
 criterion = "0.3"
 distance = "0.4"
+txtdist = "0.2"
+natural = "0.3"
 strsim = "0.9"
 rand = "0.7"
 
 [[bench]]
-name = "damerau_levenshtein"
+name = "damlev"
 harness = false
 
 [[bench]]
-name = "levenshtein"
+name = "leven"
 harness = false
 
 [[bench]]
@@ -25,5 +28,5 @@ name = "jaro"
 harness = false
 
 [[bench]]
-name = "jaro_winkler"
+name = "jarwin"
 harness = false

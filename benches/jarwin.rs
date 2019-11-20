@@ -3,6 +3,7 @@ use eddie::JaroWinkler;
 use rand::rngs::ThreadRng;
 use std::time::Duration;
 use strsim;
+use natural;
 
 use criterion::{
     criterion_group,
@@ -11,15 +12,14 @@ use criterion::{
 };
 
 
-pub fn jaro_winkler_benchmark(cr: &mut Criterion) {
+pub fn jarwin_benchmark(cr: &mut Criterion) {
     let jarwin = JaroWinkler::new();
-    let mut group = cr.benchmark_group("jaro_winkler");
+    let mut group = cr.benchmark_group("jarwin");
 
-    for size in &[3, 6, 12, 15] {
+    for size in &[3, 6, 9, 12, 15] {
         let mut gen = Generator::new(*size, 2);
 
-        group.bench_with_input(
-            format!("eddie size={}", size),
+        group.bench_with_input(format!("eddie size={}", size),
             size,
             |bench, _| {
                 bench.iter(|| {
@@ -29,13 +29,22 @@ pub fn jaro_winkler_benchmark(cr: &mut Criterion) {
             }
         );
 
-        group.bench_with_input(
-            format!("strsim size={}", size),
+        group.bench_with_input(format!("strsim size={}", size),
             size,
             |bench, _| {
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     strsim::jaro_winkler(s1, s2)
+                });
+            }
+        );
+
+        group.bench_with_input(format!("natural size={}", size),
+            size,
+            |bench, _| {
+                bench.iter(|| {
+                    let (s1, s2) = &gen.next();
+                    natural::distance::jaro_winkler_distance(s1, s2)
                 });
             }
         );
@@ -48,9 +57,9 @@ pub fn jaro_winkler_benchmark(cr: &mut Criterion) {
 criterion_group!{
     name = benches;
     config = Criterion::default()
-                .warm_up_time(Duration::from_millis(500))
-                .measurement_time(Duration::from_millis(1000));
-    targets = jaro_winkler_benchmark
+                .warm_up_time(Duration::from_millis(20))
+                .measurement_time(Duration::from_millis(50));
+    targets = jarwin_benchmark
 }
 
 criterion_main!(benches);

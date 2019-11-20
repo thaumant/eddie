@@ -1,5 +1,4 @@
-use std::cmp::min;
-use crate::jaro::{Jaro, JaroState};
+use crate::jaro::{Jaro, State};
 
 #[cfg(test)]
 mod tests;
@@ -20,28 +19,30 @@ impl JaroWinkler {
         JaroWinkler { scaling, jaro }
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        let scaling = 0.1;
+        let jaro = Jaro::with_capacity(capacity);
+        JaroWinkler { scaling, jaro }
+    }
+
     pub fn set_scaling(&mut self, s: f64) -> &mut Self {
         self.scaling = s;
         self
     }
 
     pub fn dist(&self, str1: &str, str2: &str) -> f64 {
-        let scaling = self.scaling;
         let jaro_dist = self.jaro.dist(str1, str2);
-        let JaroState { word1, word2, .. } = &*self.jaro.state.borrow();
+        if jaro_dist == 0. { return 0.; }
 
+        let State { word1, word2, .. } = &*self.jaro.state.borrow();
+
+        let scaling = self.scaling;
         let mut prefix_size = 0.;
-        for i in 0..min3(word1.len(), word2.len(), MAX_PREFIX) {
+        for i in 0 .. min!(word1.len(), word2.len(), MAX_PREFIX) {
             if word1[i] != word2[i] { break; }
             prefix_size += 1.;
         }
 
         jaro_dist - prefix_size * scaling * (1. - jaro_dist)
     }
-}
-
-
-#[inline]
-fn min3(x1: usize, x2: usize, x3: usize) -> usize {
-    min(min(x1, x2), x3)
 }

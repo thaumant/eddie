@@ -1,7 +1,7 @@
-use super::{Levenshtein, MAX_CHARS};
+use super::{Levenshtein, DEFAULT_CAPACITY};
 
 #[test]
-fn levenshtein_dist_equality() {
+fn equality() {
     let lv = Levenshtein::new();
     let sample = [
         "",
@@ -19,7 +19,7 @@ fn levenshtein_dist_equality() {
 }
 
 #[test]
-fn levenshtein_dist_prefix() {
+fn prefix() {
     let lv = Levenshtein::new();
     let s1 = "captain";
     let sample = [
@@ -39,7 +39,7 @@ fn levenshtein_dist_prefix() {
 }
 
 #[test]
-fn levenshtein_dist_del_continuous() {
+fn del_continuous() {
     let lv = Levenshtein::new();
     let s2 = "captain";
     let sample = [
@@ -64,7 +64,7 @@ fn levenshtein_dist_del_continuous() {
 }
 
 #[test]
-fn levenshtein_dist_add_continuous() {
+fn add_continuous() {
     let lv = Levenshtein::new();
     let s1 = "captain";
     let sample = [
@@ -89,7 +89,7 @@ fn levenshtein_dist_add_continuous() {
 }
 
 #[test]
-fn levenshtein_dist_sub_continuous() {
+fn sub_continuous() {
     let lv = Levenshtein::new();
     let s1 = "captain";
     let sample = [
@@ -114,7 +114,7 @@ fn levenshtein_dist_sub_continuous() {
 }
 
 #[test]
-fn levenshtein_dist_del_intermittent() {
+fn del_intermittent() {
     let lv = Levenshtein::new();
     let s2 = "captain";
     let sample = [
@@ -134,7 +134,7 @@ fn levenshtein_dist_del_intermittent() {
 }
 
 #[test]
-fn levenshtein_dist_add_intermittent() {
+fn add_intermittent() {
     let lv = Levenshtein::new();
     let s1 = "captain";
     let sample = [
@@ -154,7 +154,7 @@ fn levenshtein_dist_add_intermittent() {
 }
 
 #[test]
-fn levenshtein_dist_sub_intermittent() {
+fn sub_intermittent() {
     let lv = Levenshtein::new();
     let s1 = "captain";
     let sample = [
@@ -172,26 +172,19 @@ fn levenshtein_dist_sub_intermittent() {
 }
 
 #[test]
-fn levenshtein_dist_max_chars() {
+fn growth() {
     let lv = Levenshtein::new();
 
-    for len in 0 .. MAX_CHARS + 1 {
+    for len in 0 .. DEFAULT_CAPACITY * 2 {
         let s1 = &"a".repeat(len);
         let s2 = &"b".repeat(len);
+        assert_eq!(lv.dist(s1, s1), 0);
         assert_eq!(lv.dist(s1, s2), len);
-        assert_eq!(lv.dist(s2, s1), len);
-    }
-
-    for len in MAX_CHARS + 1 .. MAX_CHARS + 2 {
-        let s1 = &"a".repeat(len);
-        let s2 = &"b".repeat(len);
-        assert_eq!(lv.dist(s1, s2), MAX_CHARS);
-        assert_eq!(lv.dist(s2, s1), MAX_CHARS);
     }
 }
 
 #[test]
-fn levenshtein_dist_utf_multibyte() {
+fn utf_multibyte() {
     let lv = Levenshtein::new();
     let s1 = "もしもし";
     let sample= [

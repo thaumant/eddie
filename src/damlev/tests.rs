@@ -1,8 +1,8 @@
-use super::{DamerauLevenshtein, MAX_CHARS};
+use super::{DamerauLevenshtein, DEFAULT_CAPACITY};
 
 #[test]
-fn damlev_dist_equality() {
-    let dl = DamerauLevenshtein::new();
+fn equality() {
+    let damlev = DamerauLevenshtein::new();
     let sample = [
         "",
         "c",
@@ -14,13 +14,13 @@ fn damlev_dist_equality() {
         "captain",
     ];
     for s in sample.iter() {
-        assert_eq!(dl.dist(s, s), 0);
+        assert_eq!(damlev.dist(s, s), 0);
     }
 }
 
 #[test]
-fn damlev_dist_prefix() {
-    let dl = DamerauLevenshtein::new();
+fn prefix() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "captain";
     let sample = [
         (1, "captai"),
@@ -32,14 +32,14 @@ fn damlev_dist_prefix() {
         (7, ""),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
-        assert_eq!(dl.dist(s2, s1), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s2, s1), *d);
     }
 }
 
 #[test]
-fn damlev_dist_del_continuous() {
-    let dl = DamerauLevenshtein::new();
+fn del_continuous() {
+    let damlev = DamerauLevenshtein::new();
     let s2 = "captain";
     let sample = [
         (1, "_captain"),
@@ -58,13 +58,13 @@ fn damlev_dist_del_continuous() {
         (4, "captain____"),
     ];
     for (d, s1) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_add_continuous() {
-    let dl = DamerauLevenshtein::new();
+fn add_continuous() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "captain";
     let sample = [
         (1, "_captain"),
@@ -83,13 +83,13 @@ fn damlev_dist_add_continuous() {
         (4, "captain____"),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_sub_continuous() {
-    let dl = DamerauLevenshtein::new();
+fn sub_continuous() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "captain";
     let sample = [
         (1, "_aptain"),
@@ -108,13 +108,13 @@ fn damlev_dist_sub_continuous() {
         (4, "cap____"),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_swp_continuous() {
-    let dl = DamerauLevenshtein::new();
+fn trans_continuous() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "captain";
     let sample = [
         (1, "acptain"),
@@ -126,13 +126,13 @@ fn damlev_dist_swp_continuous() {
         (3, "cpaatni"),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_del_intermittent() {
-    let dl = DamerauLevenshtein::new();
+fn del_intermittent() {
+    let damlev = DamerauLevenshtein::new();
     let s2 = "captain";
     let sample = [
         (1, "_captain"),
@@ -146,13 +146,13 @@ fn damlev_dist_del_intermittent() {
         (4, "capt_a_i_n_"),
     ];
     for (d, s1) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_add_intermittent() {
-    let dl = DamerauLevenshtein::new();
+fn add_intermittent() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "captain";
     let sample = [
         (1, "_captain"),
@@ -166,13 +166,13 @@ fn damlev_dist_add_intermittent() {
         (4, "capt_a_i_n_"),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_sub_intermittent() {
-    let dl = DamerauLevenshtein::new();
+fn sub_intermittent() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "captain";
     let sample = [
         (1, "_aptain"),
@@ -184,13 +184,13 @@ fn damlev_dist_sub_intermittent() {
         (3, "ca_t_i_"),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_swp_intermittent() {
-    let dl = DamerauLevenshtein::new();
+fn trans_intermittent() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "captain";
     let sample = [
         (1, "acptain"),
@@ -200,13 +200,13 @@ fn damlev_dist_swp_intermittent() {
         (2, "catpani"),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }
 
 #[test]
-fn damlev_dist_mixed() {
-    let dl = DamerauLevenshtein::new();
+fn mixed() {
+    let damlev = DamerauLevenshtein::new();
     let sample = [
         (2, "ca", "abc"),
         (2, "a tc", "a cat"),
@@ -214,33 +214,27 @@ fn damlev_dist_mixed() {
         (3, "captain", "atpcain"),
     ];
     for (d, s1, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
-        assert_eq!(dl.dist(s2, s1), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s2, s1), *d);
     }
 }
 
 #[test]
-fn damlev_dist_max_chars() {
-    let dl = DamerauLevenshtein::new();
+fn growth() {
+    let damlev = DamerauLevenshtein::new();
 
-    for len in 0 .. MAX_CHARS + 1 {
+    for len in DEFAULT_CAPACITY + 1 .. DEFAULT_CAPACITY * 2 {
         let s1 = &"a".repeat(len);
         let s2 = &"b".repeat(len);
-        assert_eq!(dl.dist(s1, s2), len);
-        assert_eq!(dl.dist(s2, s1), len);
-    }
-
-    for len in MAX_CHARS + 1 .. MAX_CHARS + 2 {
-        let s1 = &"a".repeat(len);
-        let s2 = &"b".repeat(len);
-        assert_eq!(dl.dist(s1, s2), MAX_CHARS);
-        assert_eq!(dl.dist(s2, s1), MAX_CHARS);
+        assert_eq!(damlev.dist(s1, s1), 0);
+        assert_eq!(damlev.dist(s1, ""), len);
+        assert_eq!(damlev.dist(s1, s2), len);
     }
 }
 
 #[test]
-fn damlev_dist_utf_multibyte() {
-    let dl = DamerauLevenshtein::new();
+fn utf_multibyte() {
+    let damlev = DamerauLevenshtein::new();
     let s1 = "もしもし";
     let sample= [
         (1, "もしもしし"),
@@ -253,6 +247,6 @@ fn damlev_dist_utf_multibyte() {
         (4, ""),
     ];
     for (d, s2) in sample.iter() {
-        assert_eq!(dl.dist(s1, s2), *d);
+        assert_eq!(damlev.dist(s1, s2), *d);
     }
 }

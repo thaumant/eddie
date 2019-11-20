@@ -8,7 +8,7 @@ fn floor3(num: f64) -> f64 {
 
 
 #[test]
-fn jarwin_equality() {
+fn equality() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (1., ""),
@@ -27,7 +27,7 @@ fn jarwin_equality() {
 
 
 #[test]
-fn jarwin_inequality() {
+fn inequality() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0., "a",     "b"),
@@ -44,7 +44,7 @@ fn jarwin_inequality() {
 
 
 #[test]
-fn jarwin_prefix() {
+fn prefix() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0.000, "mailbox", ""),
@@ -63,7 +63,7 @@ fn jarwin_prefix() {
 
 
 #[test]
-fn jarwin_postfix() {
+fn postfix() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0.952, "mailbox", "ailbox"),
@@ -81,7 +81,7 @@ fn jarwin_postfix() {
 
 
 #[test]
-fn jarwin_scaling() {
+fn scaling() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0.904, "_ailbox", "-ailbox"),
@@ -100,7 +100,7 @@ fn jarwin_scaling() {
 
 
 #[test]
-fn jarwin_mixed() {
+fn mixed() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0.804, "dwayne",    "duane"),
