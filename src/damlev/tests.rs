@@ -151,7 +151,14 @@ fn mixed() {
         (2, "ca", "abc"),
         (2, "a tc", "a cat"),
         (3, "a cat", "an abct"),
-        (3, "mailbox", "alimbox"),
+        (2, "crate",     "trace"),
+        (2, "captain",   "ptain"),
+        (2, "dwayne",    "duane"),
+        (1, "martha",    "marhta"),
+        (3, "kitten",    "sitting"),
+        (3, "mailbox",   "alimbox"),
+        (4, "dixon",     "dicksonx"),
+        (2, "jellyfish", "smellyfish"),
     ];
     for (d, s1, s2) in sample.iter() {
         assert_eq!(damlev.distance(s1, s2), *d);

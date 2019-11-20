@@ -103,8 +103,15 @@ fn scaling() {
 fn mixed() {
     let jarwin = JaroWinkler::new();
     let sample = [
+        (0.000, "ca",        "abc"),
+        (0.740, "a tc",      "a cat"),
+        (0.769, "a cat",     "an abct"),
+        (0.733, "crate",     "trace"),
+        (0.804, "captain",   "ptain"),
         (0.804, "dwayne",    "duane"),
         (0.927, "martha",    "marhta"),
+        (0.746, "kitten",    "sitting"),
+        (0.849, "mailbox",   "alimbox"),
         (0.720, "dixon",     "dicksonx"),
         (0.896, "jellyfish", "smellyfish"),
     ];

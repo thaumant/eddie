@@ -249,9 +249,15 @@ fn utf_multibyte() {
 fn mixed() {
     let jaro = Jaro::new();
     let sample = [
+        (0.000, "ca",        "abc"),
+        (0.783, "a tc",      "a cat"),
+        (0.790, "a cat",     "an abct"),
+        (0.733, "crate",     "trace"),
         (0.804, "captain",   "ptain"),
         (0.822, "dwayne",    "duane"),
         (0.944, "martha",    "marhta"),
+        (0.746, "kitten",    "sitting"),
+        (0.849, "mailbox",   "alimbox"),
         (0.766, "dixon",     "dicksonx"),
         (0.896, "jellyfish", "smellyfish"),
     ];

@@ -131,10 +131,17 @@ fn sub_intermittent() {
 fn mixed() {
     let lev = Levenshtein::new();
     let sample = [
-        (3, "ca", "abc"),
-        (3, "a tc", "a cat"),
-        (4, "a cat", "an abct"),
-        (3, "mailbox", "alimbox"),
+        (3, "ca",        "abc"),
+        (3, "a tc",      "a cat"),
+        (4, "a cat",     "an abct"),
+        (2, "crate",     "trace"),
+        (2, "captain",   "ptain"),
+        (2, "dwayne",    "duane"),
+        (2, "martha",    "marhta"),
+        (3, "kitten",    "sitting"),
+        (3, "mailbox",   "alimbox"),
+        (4, "dixon",     "dicksonx"),
+        (2, "jellyfish", "smellyfish"),
     ];
     for (d, s1, s2) in sample.iter() {
         assert_eq!(lev.distance(s1, s2), *d);
