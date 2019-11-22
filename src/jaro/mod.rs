@@ -8,6 +8,37 @@ use crate::utils::write_str;
 
 const DEFAULT_CAPATITY: usize = 25;
 
+/// # Jaro similarity.
+///
+/// See [the detailed description][1].
+///
+/// [1]: https://en.wikipedia.org/wiki/Jaro–Winkler_distance#Jaro_Similarity
+///
+/// # Usage
+///
+/// ```rust
+/// use eddie::Jaro;
+///
+/// let jaro = Jaro::new();
+/// let sim = jaro.similarity("martha", "marhta");
+/// assert!((sim - 0.94).abs() < 0.01);
+/// ```
+///
+/// # Complementary metrics
+///
+/// Relative distance:
+/// ```rust
+/// # let jaro = eddie::Jaro::new();
+/// # let s1 = "martha";
+/// # let s2 = "marhta";
+/// let sim = jaro.similarity(s1, s2);
+/// let dist = jaro.rel_dist(s1, s2);
+/// assert_eq!(dist, 1.0 - sim);
+/// ```
+pub struct Jaro {
+    pub state: RefCell<State>,
+}
+
 
 pub struct State {
     pub word1:    Vec<char>,
@@ -17,27 +48,39 @@ pub struct State {
 }
 
 
-pub struct Jaro {
-    pub state: RefCell<State>,
-}
-
-
 impl Jaro {
+    /// Creates a new instance of Jaro struct with an internal state
+    /// for the metric methods to reuse.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use eddie::Jaro;
+    ///
+    /// let jaro = Jaro::new();
+    /// ```
     pub fn new() -> Self {
-        Self::with_capacity(DEFAULT_CAPATITY)
-    }
-
-    pub fn with_capacity(capacity: usize) -> Self {
         Jaro {
             state: RefCell::new(State {
-                word1:    Vec::with_capacity(capacity),
-                word2:    Vec::with_capacity(capacity),
-                matches1: Vec::with_capacity(capacity),
-                matches2: Vec::with_capacity(capacity),
+                word1:    Vec::with_capacity(DEFAULT_CAPATITY),
+                word2:    Vec::with_capacity(DEFAULT_CAPATITY),
+                matches1: Vec::with_capacity(DEFAULT_CAPATITY),
+                matches2: Vec::with_capacity(DEFAULT_CAPATITY),
             })
         }
     }
 
+    /// Similarity metric. Reflects how close two strings are,
+    /// ranging from 1.0 (equality) to 0.0 (nothing in common).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use eddie::Jaro;
+    /// # let mut jaro = Jaro::new();
+    /// let sim = jaro.similarity("martha", "marhta");
+    /// assert!((sim - 0.94).abs() < 0.01);
+    /// ```
     pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
         match (str1.len(), str2.len()) {
             (0, 0) => { return 1.0; }
@@ -108,6 +151,18 @@ impl Jaro {
         (matches/len1 + matches/len2 + ((matches - trans/2.) / matches)) / 3.
     }
 
+    /// Relative distance metric. Inversion of similarity.
+    /// Reflects how far apart two strings are,
+    /// ranging from 0.0 (equality) to 1.0 (nothing in common).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use eddie::Jaro;
+    /// # let mut jaro = Jaro::new();
+    /// let dist = jaro.rel_dist("martha", "marhta");
+    /// assert!((dist - 0.06).abs() < 0.01);
+    /// ```
     pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
         1.0 - self.similarity(str1, str2)
     }

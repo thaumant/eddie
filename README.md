@@ -1,83 +1,59 @@
 # Eddie
 
-Fast and well-tested implementations of common edit distance/word similarity metrics: Jaro, Jaro-Winkler, Levenshtein, and Damerau-Levenshtein.
+Fast and well-tested implementations of common edit distance/string similarity metrics:
+- Levenshtein,
+- Damerau-Levenshtein,
+- Jaro,
+- Jaro-Winkler.
 
 
-## Metric descriptions and usage
+ # Usage
 
-### Levenshtein
+Cargo.toml:
+```toml
+[dependencies]
+eddie = "0.1"
+ ```
 
-See [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) for the detailed description.
-
-Metrics/methods:
-- `distance` — a number of edits (character additions, deletions and substitutions) required to transform one string into the other;
-- `rel_dist` — relative distance, a number of edits relative to the length of the longest string, ranging from 1.0 (equality) to 0.0 (nothing in common);
-- `similarity` — inversion of relative distance (0.0 for equality).
-
+Levenshtein:
 ```rust
-let lev = eddie::Levenshtein::new();
-
-println!("{}", lev.distance("martha", "marhta"));   // 2
-println!("{}", lev.rel_dist("martha", "marhta"));   // 0.333
-println!("{}", lev.similarity("martha", "marhta")); // 0.667
+use eddie::Levenshtein;
+let lev = Levenshtein::new();
+let dist = lev.distance("martha", "marhta");
+assert_eq!(dist, 2);
 ```
 
-
-### Damerau-Levenshtein
-
-See [Damerau-Levenshtein distance](https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance) for the detailed description.
-
-Metrics/methods:
-- `distance` — a number of edits (character additions, deletions, substitutions and transpositions) required to transform one string into the other;
-- `rel_dist` — relative distance, a number of edits relative to the length of the longest string, ranging from 0.0 (equality) to 1.0 (nothing in common);
-- `similarity` — inversion of relative distance (1.0 for equality).
-
+Damerau-Levenshtein:
 ```rust
-let damlev = eddie::DamerauLevenshtein::new();
-
-println!("{}", damlev.distance("martha", "marhta"));   // 1
-println!("{}", damlev.rel_dist("martha", "marhta"));   // 0.167
-println!("{}", damlev.similarity("martha", "marhta")); // 0.833
+use eddie::DamerauLevenshtein;
+let damlev = DamerauLevenshtein::new();
+let dist = damlev.distance("martha", "marhta");
+assert_eq!(dist, 1);
 ```
 
-
-### Jaro
-
-See [Jaro similarity](https://en.wikipedia.org/wiki/Jaro–Winkler_distance#Jaro_Similarity) for the detailed description.
-
-Metrics/methods:
-- `similarity` — reflects how close two strings are, ranging from 1.0 (equality) to 0.0 (nothing in common);
-- `rel_dist` — inversion of similarity (0.0 for equality).
-
+Jaro:
 ```rust
-let jaro = eddie::Jaro::new();
-
-println!("{}", jaro.similarity("martha", "marhta")); // 0.944
-println!("{}", jaro.rel_dist("martha", "marhta"));   // 0.056
+use eddie::Jaro;
+let jaro = Jaro::new();
+let sim = jaro.similarity("martha", "marhta");
+assert!((sim - 0.94).abs() < 0.01);
 ```
 
-
-### Jaro-Winkler
-
-See [Jaro-Winkler similarity](https://en.wikipedia.org/wiki/Jaro–Winkler_distance#Jaro–Winkler_Similarity) for the detailed description.
-
-Metrics/methods:
-- `similarity` — like Jaro similarity, but gives a higher score to the strings that start with the same sequence of characters (1.0 for equality);
-- `rel_dist` — inversion of similarity (0.0 for equality).
-
+Jaro-Winkler:
 ```rust
-let jarwin = eddie::JaroWinkler::new();
-
-println!("{}", jarwin.similarity("martha", "marhta")); // 0.927
-println!("{}", jaro.rel_dist("martha", "marhta"));     // 0.073
+use eddie::JaroWinkler;
+let jarwin = JaroWinkler::new();
+let sim = jarwin.similarity("martha", "marhta");
+assert!((sim - 0.96).abs() < 0.01);
 ```
 
+# Complementary metrics
 
-## Implementation details
-
-All algorithms are implemented using structs rather than functions. They initialize and reuse internal mutable state to avoid unnecessary allocations and computations. It has a reasonable default capacity and grows on demand.
-
-Unsafe code (mainly unchecked indexing) is used where it can provide significant performance improvements.
+The main metric methods are complemented with inverted and/or relative versions.
+The naming convention across the crate is following:
+- `distance` — a number of edits required to transform one string to the other;
+- `rel_dist` — a distance between two strings, relative to string length (inversion of similarity);
+- `similarity` — similarity between two strings (inversion of relative distance).
 
 
 ## Performance
