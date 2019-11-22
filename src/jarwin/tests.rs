@@ -48,12 +48,12 @@ fn prefix() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0.000, "mailbox", ""),
-        (0.685, "mailbox", "m"),
-        (0.714, "mailbox", "ma"),
-        (0.752, "mailbox", "mai"),
-        (0.799, "mailbox", "mail"),
-        (0.866, "mailbox", "mailb"),
-        (0.933, "mailbox", "mailbo"),
+        (0.742, "mailbox", "m"),
+        (0.809, "mailbox", "ma"),
+        (0.866, "mailbox", "mai"),
+        (0.914, "mailbox", "mail"),
+        (0.942, "mailbox", "mailb"),
+        (0.971, "mailbox", "mailbo"),
     ];
     for (d, s1, s2) in &sample {
         assert_eq!(floor3(jarwin.similarity(s1, s2)), *d);
@@ -72,6 +72,7 @@ fn postfix() {
         (0.000, "mailbox", "box"),
         (0.000, "mailbox", "ox"),
         (0.000, "mailbox", "x"),
+        (0.000, "mailbox", ""),
     ];
     for (d, s1, s2) in &sample {
         assert_eq!(floor3(jarwin.similarity(s1, s2)), *d);
@@ -81,16 +82,16 @@ fn postfix() {
 
 
 #[test]
-fn scaling() {
+fn common_prefix_length() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0.904, "_ailbox", "-ailbox"),
-        (0.895, "m_ilbox", "m-ilbox"),
-        (0.885, "ma_lbox", "ma-lbox"),
-        (0.876, "mai_box", "mai-box"),
-        (0.866, "mail_ox", "mail-ox"),
-        (0.866, "mailb_x", "mailb-x"),
-        (0.866, "mailbo_", "mailbo-"),
+        (0.914, "m_ilbox", "m-ilbox"),
+        (0.923, "ma_lbox", "ma-lbox"),
+        (0.933, "mai_box", "mai-box"),
+        (0.942, "mail_ox", "mail-ox"),
+        (0.942, "mailb_x", "mailb-x"),
+        (0.942, "mailbo_", "mailbo-"),
     ];
     for (d, s1, s2) in &sample {
         assert_eq!(floor3(jarwin.similarity(s1, s2)), *d);
@@ -104,15 +105,15 @@ fn mixed() {
     let jarwin = JaroWinkler::new();
     let sample = [
         (0.000, "ca",        "abc"),
-        (0.740, "a tc",      "a cat"),
-        (0.769, "a cat",     "an abct"),
+        (0.826, "a tc",      "a cat"),
+        (0.811, "a cat",     "an abct"),
         (0.733, "crate",     "trace"),
         (0.804, "captain",   "ptain"),
-        (0.804, "dwayne",    "duane"),
-        (0.927, "martha",    "marhta"),
+        (0.840, "dwayne",    "duane"),
+        (0.961, "martha",    "marhta"),
         (0.746, "kitten",    "sitting"),
         (0.849, "mailbox",   "alimbox"),
-        (0.720, "dixon",     "dicksonx"),
+        (0.813, "dixon",     "dicksonx"),
         (0.896, "jellyfish", "smellyfish"),
     ];
     for (d, s1, s2) in sample.iter() {
@@ -128,9 +129,9 @@ fn rel_dist() {
     let sample = [
         (0.000, "",        ""),
         (1.000, "mailbox", ""),
-        (0.200, "mailbox", "mail"),
+        (0.085, "mailbox", "mail"),
         (0.095, "mailbox", "ilbox"),
-        (0.104, "m_ilbox", "m-ilbox"),
+        (0.085, "m_ilbox", "m-ilbox"),
     ];
     for (d, s1, s2) in sample.iter() {
         assert_eq!(floor3(jarwin.rel_dist(s1, s2)), *d);
