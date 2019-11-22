@@ -1,8 +1,32 @@
 [package]
 name = "eddie"
+description = """
+Fast and well-tested implementations of common edit distance/string similarity metrics:
+Levenshtein, Damerau-Levenshtein, Jaro, and Jaro-Winkler.
+"""
 version = "0.1.0"
-authors = ["Ilia Schelokov <thaumant@gmail.com>"]
 edition = "2018"
+authors = ["Ilia Schelokov <thaumant@gmail.com>"]
+homepage = "http://github.com/thaumant/eddie"
+repository = "http://github.com/thaumant/eddie"
+license = "MIT"
+categories = [
+    "algorithms",
+    "text-processing",
+]
+keywords = [
+    "jaro",
+    "jaro-winkler",
+    "levenshtein",
+    "damerau-levenshtein",
+    "matching",
+    "fuzzy",
+    "search",
+    "text",
+    "string",
+    "similarity",
+    "distance",
+]
 
 [dependencies]
 
