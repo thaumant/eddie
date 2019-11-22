@@ -16,16 +16,8 @@ categories = [
 ]
 keywords = [
     "jaro",
-    "jaro-winkler",
     "levenshtein",
-    "damerau-levenshtein",
-    "matching",
-    "fuzzy",
-    "search",
     "text",
-    "string",
-    "similarity",
-    "distance",
 ]
 
 [dependencies]
