@@ -7,7 +7,7 @@ Fast and well-tested implementations of common edit distance/string similarity m
 - Jaro-Winkler.
 
 
- # Usage
+## Usage
 
 Cargo.toml:
 ```toml
@@ -47,7 +47,7 @@ let sim = jarwin.similarity("martha", "marhta");
 assert!((sim - 0.96).abs() < 0.01);
 ```
 
-# Complementary metrics
+## Complementary metrics
 
 The main metric methods are complemented with inverted and/or relative versions.
 The naming convention across the crate is following:
