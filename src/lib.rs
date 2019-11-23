@@ -63,6 +63,17 @@
 //! - `distance` — a number of edits required to transform one string to the other;
 //! - `rel_dist` — a distance between two strings, relative to string length (inversion of similarity);
 //! - `similarity` — similarity between two strings (inversion of relative distance).
+//!
+//!
+//! # Performance
+//!
+//! At the moment Eddie has the fastest implementations among the alternatives from crates.io
+//! that have Unicode support. For any given algorithm you can expect at least 1.5-2x speedup
+//! for typical use cases.
+//!
+//! For the detailed measurements tables see [GitHub page][1].
+//!
+//! [1]: https://github.com/thaumant/eddie#performance
 
 mod utils;
 mod leven;
