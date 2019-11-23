@@ -1,7 +1,8 @@
-//! Fast and well-tested implementations of common edit distance/string similarity
+//! Fast and well-tested implementations of edit distance/string similarity
 //! metrics:
 //! - Levenshtein,
 //! - Damerau-Levenshtein,
+//! - Hamming,
 //! - Jaro,
 //! - Jaro-Winkler.
 //!
@@ -30,6 +31,14 @@
 //! assert_eq!(dist, 1);
 //! ```
 //!
+//! Hamming:
+//! ```rust
+//! use eddie::Hamming;
+//! let hamming = Hamming::new();
+//! let dist = hamming.distance("martha", "marhta");
+//! assert_eq!(dist, Some(2));
+//! ```
+//!
 //! Jaro:
 //! ```rust
 //! use eddie::Jaro;
@@ -56,12 +65,14 @@
 //! - `similarity` — similarity between two strings (inversion of relative distance).
 
 mod utils;
-mod jaro;
-mod jarwin;
 mod leven;
 mod damlev;
+mod hamming;
+mod jaro;
+mod jarwin;
 
-pub use crate::jaro::Jaro;
-pub use crate::jarwin::JaroWinkler;
 pub use crate::leven::Levenshtein;
 pub use crate::damlev::DamerauLevenshtein;
+pub use crate::hamming::Hamming;
+pub use crate::jaro::Jaro;
+pub use crate::jarwin::JaroWinkler;

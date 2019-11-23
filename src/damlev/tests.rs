@@ -157,6 +157,7 @@ fn mixed() {
         (1, "martha",    "marhta"),
         (3, "kitten",    "sitting"),
         (3, "mailbox",   "alimbox"),
+        (6, "mailbox",   "boxmail"),
         (4, "dixon",     "dicksonx"),
         (2, "jellyfish", "smellyfish"),
     ];
@@ -207,6 +208,7 @@ fn rel_dist() {
         (0.428, "mailbox", "mail"),
         (0.222, "mailbox", "mail__box"),
         (0.571, "mailbox", "____box"),
+        (0.857, "mailbox", "boxmail"),
         (0.428, "mailbox", "amliobx"),
     ];
     for (d, s1, s2) in sample.iter() {
@@ -224,6 +226,7 @@ fn similarity() {
         (0.571, "mailbox", "mail"),
         (0.777, "mailbox", "mail__box"),
         (0.428, "mailbox", "____box"),
+        (0.142, "mailbox", "boxmail"),
         (0.571, "mailbox", "amliobx"),
     ];
     for (d, s1, s2) in sample.iter() {

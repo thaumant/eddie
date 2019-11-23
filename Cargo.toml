@@ -1,10 +1,10 @@
 [package]
 name = "eddie"
 description = """
-Fast and well-tested implementations of common edit distance/string similarity metrics:
-Levenshtein, Damerau-Levenshtein, Jaro, and Jaro-Winkler.
+Fast and well-tested implementations of edit distance/string similarity metrics:
+Levenshtein, Damerau-Levenshtein, Hamming, Jaro, and Jaro-Winkler.
 """
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 authors = ["Ilia Schelokov <thaumant@gmail.com>"]
 homepage = "http://github.com/thaumant/eddie"
@@ -15,8 +15,9 @@ categories = [
     "text-processing",
 ]
 keywords = [
-    "jaro",
     "levenshtein",
+    "hamming",
+    "jaro",
     "text",
 ]
 
@@ -32,11 +33,15 @@ strsim = "0.9"
 rand = "0.7"
 
 [[bench]]
+name = "leven"
+harness = false
+
+[[bench]]
 name = "damlev"
 harness = false
 
 [[bench]]
-name = "leven"
+name = "hamming"
 harness = false
 
 [[bench]]

@@ -113,6 +113,7 @@ fn mixed() {
         (0.961, "martha",    "marhta"),
         (0.746, "kitten",    "sitting"),
         (0.849, "mailbox",   "alimbox"),
+        (0.000, "mailbox",   "boxmail"),
         (0.813, "dixon",     "dicksonx"),
         (0.896, "jellyfish", "smellyfish"),
     ];
@@ -132,6 +133,8 @@ fn rel_dist() {
         (0.085, "mailbox", "mail"),
         (0.095, "mailbox", "ilbox"),
         (0.085, "m_ilbox", "m-ilbox"),
+        (0.150, "mailbox", "alimbox"),
+        (1.000, "mailbox", "boxmail"),
     ];
     for (d, s1, s2) in sample.iter() {
         assert_eq!(floor3(jarwin.rel_dist(s1, s2)), *d);

@@ -258,6 +258,7 @@ fn mixed() {
         (0.944, "martha",    "marhta"),
         (0.746, "kitten",    "sitting"),
         (0.849, "mailbox",   "alimbox"),
+        (0.000, "mailbox",   "boxmail"),
         (0.766, "dixon",     "dicksonx"),
         (0.896, "jellyfish", "smellyfish"),
     ];
@@ -293,6 +294,7 @@ fn rel_dist() {
         (0.121, "mailbox", "....mailbox"),
         (0.285, "mailbox", "mail..."),
         (0.095, "mailbox", "amlibox"),
+        (1.000, "mailbox", "boxmail"),
     ];
     for (d, s1, s2) in sample.iter() {
         assert_eq!(floor3(jaro.rel_dist(s1, s2)), *d);
