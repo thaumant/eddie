@@ -12,7 +12,7 @@
 //! Cargo.toml:
 //! ```toml
 //! [dependencies]
-//! eddie = "0.1"
+//! eddie = "0.2"
 //!  ```
 //!
 //! Levenshtein:
