@@ -3,7 +3,7 @@ mod tests;
 
 use std::cmp::min;
 use std::cell::RefCell;
-use crate::utils::write_str;
+use crate::utils::Rewrite;
 
 
 const DEFAULT_CAPATITY: usize = 25;
@@ -96,8 +96,8 @@ impl Jaro {
             matches2,
         } = &mut *self.state.borrow_mut();
 
-        write_str(str1, word1);
-        write_str(str2, word2);
+        word1.rewrite_with(str1.chars());
+        word2.rewrite_with(str2.chars());
         matches1.clear();
         matches2.clear();
         matches1.resize(word1.len(), false);

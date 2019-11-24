@@ -6,7 +6,7 @@ mod tests;
 use std::cmp::max;
 use std::collections::BTreeMap;
 use std::cell::RefCell;
-use crate::utils::write_str;
+use crate::utils::Rewrite;
 use matrix::Matrix;
 
 const DEFAULT_CAPACITY: usize = 20;
@@ -102,8 +102,8 @@ impl DamerauLevenshtein {
 
         last_i1.clear();
 
-        write_str(s1, word1);
-        write_str(s2, word2);
+        word1.rewrite_with(s1.chars());
+        word2.rewrite_with(s2.chars());
         let len1 = word1.len();
         let len2 = word2.len();
 

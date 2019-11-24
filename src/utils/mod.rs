@@ -19,21 +19,31 @@ macro_rules! max {
 }
 
 
-pub fn write_str(s: &str, vec: &mut Vec<char>) -> () {
-    unsafe {
-        let len = vec.len();
-        let mut i = 0isize;
-        let mut p = vec.as_mut_ptr();
-        let mut cap = vec.capacity() as isize;
-        for c in s.chars() {
+pub trait Rewrite<T> {
+    fn rewrite_with<It: Iterator<Item=T>>(&mut self, it: It);
+}
+
+
+impl<T> Rewrite<T> for Vec<T> {
+    fn rewrite_with<It: Iterator<Item=T>>(&mut self, it: It) {
+        self.clear();
+        let mut i = 0;
+        let mut p = self.as_mut_ptr();
+        let mut cap = self.capacity() as isize;
+
+        for c in it.into_iter() {
             if i >= cap {
-                vec.reserve(max(cap * 2, 1) as usize - len);
-                cap = vec.capacity() as isize;
-                p = vec.as_mut_ptr();
+                self.reserve(max(cap * 2, 1) as usize);
+                cap = self.capacity() as isize;
+                p = self.as_mut_ptr();
             }
-            ptr::write(p.offset(i), c);
-            i += 1;
+            unsafe {
+                ptr::write(p.offset(i), c);
+                i += 1;
+            }
         }
-        vec.set_len(i as usize);
+        unsafe {
+            self.set_len(i as usize);
+        }
     }
 }

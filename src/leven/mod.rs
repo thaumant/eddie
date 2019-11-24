@@ -2,7 +2,7 @@
 mod tests;
 
 use std::cell::RefCell;
-use crate::utils::write_str;
+use crate::utils::Rewrite;
 
 const DEFAULT_CAPACITY: usize = 20;
 
@@ -93,7 +93,7 @@ impl Levenshtein {
         let State { len1, word2, cache, .. } = &mut *self.state.borrow_mut();
 
         *len1 = 0;
-        write_str(str2, word2);
+        word2.rewrite_with(str2.chars());
         cache.clear();
         for i in 0..word2.len() + 1 { cache.push(i as u8 + 1); }
 
