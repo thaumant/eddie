@@ -54,7 +54,7 @@ pub struct Levenshtein {
 struct State {
     len1: usize,
     word2: Vec<char>,
-    cache: Vec<u8>,
+    dists: Vec<u8>,
 }
 
 
@@ -72,8 +72,8 @@ impl Levenshtein {
     pub fn new() -> Self {
         let len1 = 0;
         let word2 = Vec::with_capacity(DEFAULT_CAPACITY);
-        let cache = Vec::with_capacity(DEFAULT_CAPACITY + 1);
-        let state = State { len1, word2, cache };
+        let dists = Vec::with_capacity(DEFAULT_CAPACITY + 1);
+        let state = State { len1, word2, dists };
         Levenshtein { state: RefCell::new(state) }
     }
 
@@ -90,29 +90,38 @@ impl Levenshtein {
     /// assert_eq!(dist, 2);
     /// ```
     pub fn distance(&self, str1: &str, str2: &str) -> usize {
-        let State { len1, word2, cache, .. } = &mut *self.state.borrow_mut();
+        let state = &mut *self.state.borrow_mut();
+        let State { word2, dists, .. } = state;
 
-        *len1 = 0;
         word2.rewrite_with(str2.chars());
-        cache.clear();
-        for i in 0..word2.len() + 1 { cache.push(i as u8 + 1); }
+        dists.rewrite_with(1 .. word2.len() as u8 + 2);
 
+        let mut i1 = 0;
         let mut dist = word2.len() as u8;
         let mut prev;
-        for (i1, char1) in str1.chars().enumerate() {
-            *len1 = i1 + 1;
+
+        for char1 in str1.chars() {
             dist = i1 as u8 + 1;
             prev = i1 as u8;
-            for (i2, &char2) in word2.iter().enumerate() {
-                dist = min!(
-                    dist + 1,
-                    cache[i2] + 1,
-                    prev + (char1 != char2) as u8
-                );
-                prev = cache[i2];
-                cache[i2] = dist;
+
+            let mut i2 = 0;
+            for &char2 in word2.iter() {
+                unsafe {
+                    let prev2 = dists.get_unchecked_mut(i2);
+                    dist = min!(
+                        dist + 1,
+                        *prev2 + 1,
+                        prev + (char1 != char2) as u8
+                    );
+                    prev = *prev2;
+                    *prev2 = dist;
+                }
+                i2 += 1;
             }
+            i1 += 1;
         }
+
+        state.len1 = i1;
 
         dist as usize
     }

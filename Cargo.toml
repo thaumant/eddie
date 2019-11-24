@@ -4,7 +4,7 @@ description = """
 Fast and well-tested implementations of edit distance/string similarity metrics:
 Levenshtein, Damerau-Levenshtein, Hamming, Jaro, and Jaro-Winkler.
 """
-version = "0.2.2"
+version = "0.2.3"
 edition = "2018"
 authors = ["Ilia Schelokov <thaumant@gmail.com>"]
 homepage = "http://github.com/thaumant/eddie"
