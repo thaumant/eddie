@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod tests;
 
-use std::ptr;
 use std::cmp::max;
 
 
@@ -20,30 +19,23 @@ macro_rules! max {
 
 
 pub trait Rewrite<T> {
-    fn rewrite_with<It: Iterator<Item=T>>(&mut self, it: It);
+    fn rewrite_with<Items: Iterator<Item=T>>(&mut self, items: Items);
 }
 
 
 impl<T> Rewrite<T> for Vec<T> {
-    fn rewrite_with<It: Iterator<Item=T>>(&mut self, it: It) {
+    fn rewrite_with<Items: Iterator<Item=T>>(&mut self, items: Items) {
         self.clear();
+        let mut cap = self.capacity();
         let mut i = 0;
-        let mut p = self.as_mut_ptr();
-        let mut cap = self.capacity() as isize;
-
-        for c in it.into_iter() {
+        for item in items {
             if i >= cap {
-                self.reserve(max(cap * 2, 1) as usize);
-                cap = self.capacity() as isize;
-                p = self.as_mut_ptr();
+                self.reserve(max(cap * 2, 1));
+                cap = self.capacity();
             }
-            unsafe {
-                ptr::write(p.offset(i), c);
-                i += 1;
-            }
+            unsafe { *self.get_unchecked_mut(i) = item; }
+            i += 1;
         }
-        unsafe {
-            self.set_len(i as usize);
-        }
+        unsafe { self.set_len(i); }
     }
 }

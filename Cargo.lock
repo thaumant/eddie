@@ -172,7 +172,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "eddie"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "criterion 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "distance 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
