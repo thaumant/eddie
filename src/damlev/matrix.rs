@@ -26,18 +26,23 @@ impl Matrix {
         if self.size == 0 { return; }
         unsafe {
             for i in 0..self.size {
-                *self.ix(i, 0) = self.size as u8;
-                *self.ix(0, i) = self.size as u8;
+                self.set(i, 0, self.size as u8);
+                self.set(0, i, self.size as u8);
             }
             for i in 1..self.size {
-                *self.ix(i, 1) = i as u8 - 1;
-                *self.ix(1, i) = i as u8 - 1;
+                self.set(i, 1, i as u8 - 1);
+                self.set(1, i, i as u8 - 1);
             }
         }
     }
 
     #[inline]
-    pub unsafe fn ix(&mut self, i: usize, j: usize) -> &mut u8 {
-        self.raw.get_unchecked_mut(i * self.size + j)
+    pub unsafe fn get(&self, i: usize, j: usize) -> u8 {
+        *self.raw.get_unchecked(i * self.size + j)
+    }
+
+    #[inline]
+    pub unsafe fn set(&mut self, i: usize, j: usize, val: u8) -> () {
+        *self.raw.get_unchecked_mut(i * self.size + j) = val;
     }
 }

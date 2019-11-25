@@ -104,9 +104,9 @@ impl Levenshtein {
             dist = i1 as u8 + 1;
             prev = i1 as u8;
 
-            let mut i2 = 0;
-            for &char2 in word2.iter() {
+            for i2 in 0..word2.len() {
                 unsafe {
+                    let char2 = *word2.get_unchecked(i2);
                     let prev2 = dists.get_unchecked_mut(i2);
                     dist = min!(
                         dist + 1,
@@ -116,7 +116,6 @@ impl Levenshtein {
                     prev = *prev2;
                     *prev2 = dist;
                 }
-                i2 += 1;
             }
             i1 += 1;
         }

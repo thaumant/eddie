@@ -105,9 +105,14 @@ impl JaroWinkler {
         let State { word1, word2, .. } = &*self.jaro.state.borrow();
 
         let scaling = self.scaling;
+
         let mut prefix_size = 0.;
         for i in 0 .. min!(word1.len(), word2.len(), MAX_PREFIX) {
-            if word1[i] != word2[i] { break; }
+            unsafe {
+                if word1.get_unchecked(i) != word2.get_unchecked(i) {
+                    break;
+                }
+            }
             prefix_size += 1.;
         }
 

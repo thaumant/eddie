@@ -41,9 +41,11 @@ fn length_difference() {
           let a1 = "a".repeat(len1);
           let a2 = "a".repeat(len2);
           let b2 = "b".repeat(len2);
+
           assert_eq!(hamming.distance(&a1, &a2), None);
-          assert_eq!(hamming.distance(&a1, &b2), None);
           assert_eq!(hamming.distance(&a2, &a1), None);
+
+          assert_eq!(hamming.distance(&a1, &b2), None);
           assert_eq!(hamming.distance(&b2, &a1), None);
       }
   }

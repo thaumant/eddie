@@ -114,14 +114,13 @@ impl Hamming {
         let mut len2 = 0;
 
         {
-            let mut chars1 = str1.chars().inspect(|_| len1 += 1);
+            let chars1 = str1.chars().inspect(|_| len1 += 1);
             let mut chars2 = str2.chars().inspect(|_| len2 += 1);
 
-            for (ch1, ch2) in chars1.by_ref().zip(chars2.by_ref()) {
+            for (ch1, ch2) in chars1.zip(chars2.by_ref()) {
                 if ch1 != ch2 { dist += 1; }
             }
 
-            if let Some(_) = chars1.next() { return None; }
             if let Some(_) = chars2.next() { return None; }
             if len1 != len2 { return None; }
         }

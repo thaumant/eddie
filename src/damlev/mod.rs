@@ -116,12 +116,12 @@ impl DamerauLevenshtein {
                 let l1 = *last_i1.get(&char2).unwrap_or(&0);
 
                 unsafe {
-                    *dists.ix(i1 + 2, i2 + 2) = min!(
-                        *dists.ix(i1 + 2, i2 + 1) + 1,
-                        *dists.ix(i1 + 1, i2 + 2) + 1,
-                        *dists.ix(i1 + 1, i2 + 1) + (char1 != char2) as u8,
-                        *dists.ix(l1, l2) + (i1 - l1) as u8 + (i2 - l2) as u8 + 1
-                    );
+                    dists.set(i1 + 2, i2 + 2, min!(
+                        dists.get(i1 + 2, i2 + 1) + 1,
+                        dists.get(i1 + 1, i2 + 2) + 1,
+                        dists.get(i1 + 1, i2 + 1) + (char1 != char2) as u8,
+                        dists.get(l1, l2) + (i1 - l1) as u8 + (i2 - l2) as u8 + 1
+                    ));
                 }
 
                 if char1 == char2 { l2 = i2 + 1; }
@@ -129,7 +129,7 @@ impl DamerauLevenshtein {
             last_i1.insert(char1, i1 + 1);
         }
 
-        let dist = unsafe { *dists.ix(len1 + 1, len2 + 1) };
+        let dist = unsafe { dists.get(len1 + 1, len2 + 1) };
         dist as usize
     }
 
