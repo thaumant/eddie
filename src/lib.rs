@@ -1,19 +1,28 @@
 //! Fast and well-tested implementations of edit distance/string similarity
 //! metrics:
-//! - Levenshtein,
-//! - Damerau-Levenshtein,
-//! - Hamming,
-//! - Jaro,
-//! - Jaro-Winkler.
+//! - [Levenshtein][1],
+//! - [Damerau-Levenshtein][2],
+//! - [Hamming][3],
+//! - [Jaro][4],
+//! - [Jaro-Winkler][5].
+//!
+//! [1]: struct.Levenshtein.html
+//! [2]: struct.DamerauLevenshtein.html
+//! [3]: struct.Hamming.html
+//! [4]: struct.Jaro.html
+//! [5]: struct.JaroWinkler.html
 //!
 //!
-//! # Usage
+//! # Installation
 //!
-//! Cargo.toml:
+//! Add this to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
 //! eddie = "0.2"
-//!  ```
+//! ```
+//!
+//!
+//! # Basic Usage
 //!
 //! Levenshtein:
 //! ```rust

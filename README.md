@@ -8,13 +8,23 @@ Fast and well-tested implementations of edit distance/string similarity metrics:
 - Jaro-Winkler.
 
 
-## Usage
+## Documentation
 
-Cargo.toml:
+See [API reference][1].
+
+[1]: https://docs.rs/eddie/
+
+
+## Installation
+
+Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 eddie = "0.2"
- ```
+```
+
+
+## Basic usage
 
 Levenshtein:
 ```rust
@@ -67,7 +77,13 @@ The naming convention across the crate is following:
 
 ## Performance
 
-Below are the tables with performance measurements for typical word lengths, including alternative implementations from crates.io that have Unicode support. Produced on Intel Core i5-4278U 2,6 GHz. All measurements are in microseconds.
+At the moment Eddie has the fastest implementations among the alternatives from crates.io
+that have Unicode support.
+
+For example, when comparing words from common english sentences you can expect
+at least 1.5-2x speedup for any given algorithm.
+
+Below are the detailed tables with performance measurements for typical word lengths, including alternative implementations from crates.io that have Unicode support. Produced on Intel Core i5-4278U 2,6 GHz. All measurements are in microseconds.
 
 
 ### Levenshtein
