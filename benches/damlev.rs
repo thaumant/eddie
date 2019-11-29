@@ -18,12 +18,11 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
     let mut group = cr.benchmark_group("damlev");
 
     for size in &[3, 6, 9, 12, 15] {
-        let mut gen = Generator::new(*size, 2);
-
         group.bench_with_input(
             format!("eddie size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
                     dl.distance(s1, s2)
@@ -35,6 +34,7 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
             format!("strsim size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
                     strsim::damerau_levenshtein(s1, s2)
@@ -46,6 +46,7 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
             format!("distance size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
                     distance::damerau_levenshtein(s1, s2)
@@ -57,6 +58,7 @@ pub fn damlev_benchmark(cr: &mut Criterion) {
             format!("txtdist size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2, _) = &gen.next();
                     txtdist::damerau_levenshtein(s1, s2)
@@ -80,7 +82,7 @@ criterion_group!{
 criterion_main!(benches);
 
 
-const GEN_SAMPLE_SIZE: usize = 100;
+const GEN_SAMPLE_SIZE: usize = 1000;
 
 
 struct Generator {
@@ -116,6 +118,7 @@ impl Generator {
     fn fill(&mut self) -> &mut Self {
         for _ in 0..GEN_SAMPLE_SIZE {
             let w1 = self.gen_word();
+            // let w2 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
             let d = self.dl.distance(&w1, &w2);
             self.sample.push((w1, w2, d));

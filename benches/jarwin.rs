@@ -17,11 +17,10 @@ pub fn jarwin_benchmark(cr: &mut Criterion) {
     let mut group = cr.benchmark_group("jarwin");
 
     for size in &[3, 6, 9, 12, 15] {
-        let mut gen = Generator::new(*size, 2);
-
         group.bench_with_input(format!("eddie size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     jarwin.similarity(s1, s2)
@@ -32,6 +31,7 @@ pub fn jarwin_benchmark(cr: &mut Criterion) {
         group.bench_with_input(format!("strsim size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     strsim::jaro_winkler(s1, s2)
@@ -39,9 +39,12 @@ pub fn jarwin_benchmark(cr: &mut Criterion) {
             }
         );
 
+        if *size == 3 { continue; }
+
         group.bench_with_input(format!("natural size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     natural::distance::jaro_winkler_distance(s1, s2)
@@ -65,7 +68,7 @@ criterion_group!{
 criterion_main!(benches);
 
 
-const GEN_SAMPLE_SIZE: usize = 100;
+const GEN_SAMPLE_SIZE: usize = 1000;
 
 
 struct Generator {
@@ -99,6 +102,7 @@ impl Generator {
     fn fill(&mut self) -> &mut Self {
         for _ in 0..GEN_SAMPLE_SIZE {
             let w1 = self.gen_word();
+            // let w2 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
             self.sample.push((w1, w2));
         }

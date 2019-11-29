@@ -6,7 +6,7 @@ mod tests;
 use std::cmp::max;
 use std::collections::BTreeMap;
 use std::cell::RefCell;
-use crate::utils::Rewrite;
+use crate::utils::{Rewrite, common_affix_sizes};
 use matrix::Matrix;
 
 const DEFAULT_CAPACITY: usize = 20;
@@ -104,6 +104,9 @@ impl DamerauLevenshtein {
 
         word1.rewrite_with(s1.chars());
         word2.rewrite_with(s2.chars());
+        let (prefix, postfix) = common_affix_sizes(word1, word2);
+        let word1 = { let l = word1.len(); &word1[prefix .. l - postfix] };
+        let word2 = { let l = word2.len(); &word2[prefix .. l - postfix] };
         let len1 = word1.len();
         let len2 = word2.len();
 

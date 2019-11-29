@@ -79,10 +79,10 @@
 //! At the moment Eddie has the fastest implementations among the alternatives from crates.io
 //! that have Unicode support.
 //!
-//! For example, when comparing words from common english sentences you can expect
-//! at least 1.5-2x speedup for any given algorithm.
+//! For example, when comparing common english words you can expect
+//! at least 1.5-2x speedup for any given algorithm except Hamming.
 //!
-//! For the detailed measurements tables see [GitHub page][1].
+//! For the detailed measurements tables see [Benchmarks][1] page.
 //!
 //! [1]: https://github.com/thaumant/eddie#performance
 

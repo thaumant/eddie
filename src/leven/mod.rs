@@ -2,7 +2,7 @@
 mod tests;
 
 use std::cell::RefCell;
-use crate::utils::Rewrite;
+use crate::utils::{Rewrite, common_affix_sizes};
 
 const DEFAULT_CAPACITY: usize = 20;
 
@@ -52,7 +52,7 @@ pub struct Levenshtein {
 
 
 struct State {
-    len1: usize,
+    word1: Vec<char>,
     word2: Vec<char>,
     dists: Vec<u8>,
 }
@@ -70,10 +70,10 @@ impl Levenshtein {
     /// let lev = Levenshtein::new();
     /// ```
     pub fn new() -> Self {
-        let len1 = 0;
+        let word1 = Vec::with_capacity(DEFAULT_CAPACITY);
         let word2 = Vec::with_capacity(DEFAULT_CAPACITY);
         let dists = Vec::with_capacity(DEFAULT_CAPACITY + 1);
-        let state = State { len1, word2, dists };
+        let state = State { word1, word2, dists };
         Levenshtein { state: RefCell::new(state) }
     }
 
@@ -91,16 +91,21 @@ impl Levenshtein {
     /// ```
     pub fn distance(&self, str1: &str, str2: &str) -> usize {
         let state = &mut *self.state.borrow_mut();
-        let State { word2, dists, .. } = state;
+        let State { word1, word2, dists } = state;
 
+        word1.rewrite_with(str1.chars());
         word2.rewrite_with(str2.chars());
         dists.rewrite_with(1 .. word2.len() as u8 + 2);
 
-        let mut i1 = 0;
+        let (prefix, postfix) = common_affix_sizes(word1, word2);
+        let word1 = { let l = word1.len(); &word1[prefix .. l - postfix] };
+        let word2 = { let l = word2.len(); &word2[prefix .. l - postfix] };
+
         let mut dist = word2.len() as u8;
         let mut prev;
 
-        for char1 in str1.chars() {
+        for i1 in 0..word1.len() {
+            let char1 = unsafe { *word1.get_unchecked(i1) };
             dist = i1 as u8 + 1;
             prev = i1 as u8;
 
@@ -117,10 +122,7 @@ impl Levenshtein {
                     *prev2 = dist;
                 }
             }
-            i1 += 1;
         }
-
-        state.len1 = i1;
 
         dist as usize
     }
@@ -138,8 +140,8 @@ impl Levenshtein {
     /// ```
     pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
         let dist = self.distance(str1, str2);
-        let State { len1, word2, .. } = &*self.state.borrow_mut();
-        let len = max!(1, *len1, word2.len());
+        let State { word1, word2, .. } = &*self.state.borrow_mut();
+        let len = max!(1, word1.len(), word2.len());
         dist as f64 / len as f64
     }
 

@@ -17,12 +17,11 @@ pub fn hamming_benchmark(cr: &mut Criterion) {
     let hamming = Hamming::new();
 
     for size in &[3, 6, 9, 12, 15] {
-        let mut gen = Generator::new(*size, 2);
-
         group.bench_with_input(
             format!("eddie size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     hamming.distance(s1, s2)
@@ -34,6 +33,7 @@ pub fn hamming_benchmark(cr: &mut Criterion) {
             format!("strsim size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     strsim::hamming(s1, s2)
@@ -45,6 +45,7 @@ pub fn hamming_benchmark(cr: &mut Criterion) {
             format!("distance size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     distance::hamming(s1, s2)
@@ -68,7 +69,7 @@ criterion_group!{
 criterion_main!(benches);
 
 
-const GEN_SAMPLE_SIZE: usize = 100;
+const GEN_SAMPLE_SIZE: usize = 1000;
 
 
 struct Generator {
@@ -102,6 +103,7 @@ impl Generator {
     fn fill(&mut self) -> &mut Self {
         for _ in 0..GEN_SAMPLE_SIZE {
             let w1 = self.gen_word();
+            // let w2 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
             self.sample.push((w1, w2));
         }

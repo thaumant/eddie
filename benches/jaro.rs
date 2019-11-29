@@ -16,12 +16,11 @@ pub fn jaro_benchmark(cr: &mut Criterion) {
     let mut group = cr.benchmark_group("jaro");
 
     for size in &[3, 6, 9, 12, 15] {
-        let mut gen = Generator::new(*size, 2);
-
         group.bench_with_input(
             format!("eddie size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     jaro.similarity(s1, s2)
@@ -33,6 +32,7 @@ pub fn jaro_benchmark(cr: &mut Criterion) {
             format!("strsim size={}", size),
             size,
             |bench, _| {
+                let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
                     let (s1, s2) = &gen.next();
                     strsim::jaro(s1, s2)
@@ -56,7 +56,7 @@ criterion_group!{
 criterion_main!(benches);
 
 
-const GEN_SAMPLE_SIZE: usize = 100;
+const GEN_SAMPLE_SIZE: usize = 1000;
 
 
 struct Generator {
@@ -90,6 +90,7 @@ impl Generator {
     fn fill(&mut self) -> &mut Self {
         for _ in 0..GEN_SAMPLE_SIZE {
             let w1 = self.gen_word();
+            // let w2 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
             self.sample.push((w1, w2));
         }

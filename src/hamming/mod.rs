@@ -109,25 +109,25 @@ impl Hamming {
     /// assert_eq!(dist2, None);
     /// ```
     pub fn distance(&self, str1: &str, str2: &str) -> Option<usize> {
+        let mut len = 0;
         let mut dist = 0;
-        let mut len1 = 0;
-        let mut len2 = 0;
+        let mut chars1 = str1.chars();
+        let mut chars2 = str2.chars();
 
-        {
-            let chars1 = str1.chars().inspect(|_| len1 += 1);
-            let mut chars2 = str2.chars().inspect(|_| len2 += 1);
-
-            for (ch1, ch2) in chars1.zip(chars2.by_ref()) {
-                if ch1 != ch2 { dist += 1; }
+        loop {
+            match (chars1.next(), chars2.next()) {
+                (Some(ch1), Some(ch2)) => {
+                    if ch1 != ch2 { dist += 1; }
+                    len += 1;
+                }
+                (None, None) => {
+                    let state = &mut *self.state.borrow_mut();
+                    state.len = len;
+                    return Some(dist);
+                }
+                _ => return None,
             }
-
-            if let Some(_) = chars2.next() { return None; }
-            if len1 != len2 { return None; }
         }
-
-        let state = &mut *self.state.borrow_mut();
-        state.len = len1;
-        Some(dist)
     }
 
     /// Relative distance metric. Returns a distance relative to the string length,

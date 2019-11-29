@@ -3,7 +3,7 @@ mod tests;
 
 use std::cmp::min;
 use std::cell::RefCell;
-use crate::utils::Rewrite;
+use crate::utils::{Rewrite, common_prefix_size};
 
 
 const DEFAULT_CAPATITY: usize = 25;
@@ -98,6 +98,10 @@ impl Jaro {
 
         word1.rewrite_with(str1.chars());
         word2.rewrite_with(str2.chars());
+        let prefix = common_prefix_size(word1, word2);
+        let word1 = &word1[prefix..];
+        let word2 = &word2[prefix..];
+
         matches1.clear();
         matches2.clear();
         matches1.resize(word1.len(), false);
@@ -105,9 +109,10 @@ impl Jaro {
 
         let mut matches = 0;
         let mut trans = 0;
+
         let len1 = word1.len();
         let len2 = word2.len();
-        let i2_range = max!(1, len1 / 2, len2 / 2) - 1;
+        let i2_range = max!(1, (len1 + prefix) / 2, (len2 + prefix) / 2) - 1;
 
         for i1 in 0..len1 {
             let i2_lower = i1 - min(i2_range, i1);
@@ -129,24 +134,26 @@ impl Jaro {
             }
         }
 
-        if matches == 0 { return 0.0; }
+        if prefix + matches == 0 { return 0.0; }
 
-        let mut i2 = 0;
-        for i1 in 0..len1 {
-            unsafe {
-                if !*matches1.get_unchecked(i1) { continue; }
-                while !*matches2.get_unchecked(i2) { i2 += 1; }
-                let char1 = word1.get_unchecked(i1);
-                let char2 = word2.get_unchecked(i2);
-                if char1 != char2 { trans += 1; }
-                i2 += 1;
+        if matches != 0 {
+            let mut i2 = 0;
+            for i1 in 0..len1 {
+                unsafe {
+                    if !*matches1.get_unchecked(i1) { continue; }
+                    while !*matches2.get_unchecked(i2) { i2 += 1; }
+                    let char1 = word1.get_unchecked(i1);
+                    let char2 = word2.get_unchecked(i2);
+                    if char1 != char2 { trans += 1; }
+                    i2 += 1;
+                }
             }
         }
 
-        let matches = matches as f64;
+        let matches = (prefix + matches) as f64;
         let trans = trans as f64;
-        let len1 = len1 as f64;
-        let len2 = len2 as f64;
+        let len1 = (prefix + len1) as f64;
+        let len2 = (prefix + len2) as f64;
 
         (matches/len1 + matches/len2 + ((matches - trans/2.) / matches)) / 3.
     }
