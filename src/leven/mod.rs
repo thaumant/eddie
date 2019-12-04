@@ -104,23 +104,18 @@ impl Levenshtein {
         let mut dist = word2.len() as u8;
         let mut prev;
 
-        for i1 in 0..word1.len() {
-            let char1 = unsafe { *word1.get_unchecked(i1) };
+        for (i1, char1) in word1.into_iter().enumerate() {
             dist = i1 as u8 + 1;
             prev = i1 as u8;
 
-            for i2 in 0..word2.len() {
-                unsafe {
-                    let char2 = *word2.get_unchecked(i2);
-                    let prev2 = dists.get_unchecked_mut(i2);
-                    dist = min!(
-                        dist + 1,
-                        *prev2 + 1,
-                        prev + (char1 != char2) as u8
-                    );
-                    prev = *prev2;
-                    *prev2 = dist;
-                }
+            for (char2, prev2) in word2.into_iter().zip(dists.into_iter()) {
+                dist = min!(
+                    dist + 1,
+                    *prev2 + 1,
+                    prev + (char1 != char2) as u8
+                );
+                prev = *prev2;
+                *prev2 = dist;
             }
         }
 
