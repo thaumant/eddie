@@ -84,7 +84,7 @@
 //!
 //! For the detailed measurements tables see [Benchmarks][1] page.
 //!
-//! [1]: https://github.com/thaumant/eddie#performance
+//! [1]: http://github.com/thaumant/eddie/tree/master/benchmarks.md
 
 mod utils;
 mod leven;
