@@ -104,19 +104,13 @@ impl JaroWinkler {
 
         let State { word1, word2, .. } = &*self.jaro.state.borrow();
 
-        let scaling = self.scaling;
+        let prefix_size = word1.into_iter()
+            .zip(word2.into_iter())
+            .take(MAX_PREFIX)
+            .take_while(|(ch1, ch2)| ch1 == ch2)
+            .count() as f64;
 
-        let mut prefix_size = 0.;
-        for i in 0 .. min!(word1.len(), word2.len(), MAX_PREFIX) {
-            unsafe {
-                if word1.get_unchecked(i) != word2.get_unchecked(i) {
-                    break;
-                }
-            }
-            prefix_size += 1.;
-        }
-
-        jaro_dist + prefix_size * scaling * (1. - jaro_dist)
+        jaro_dist + prefix_size * self.scaling * (1. - jaro_dist)
     }
 
     /// Relative distance metric. Inversion of similarity.
