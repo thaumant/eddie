@@ -41,10 +41,22 @@ pub struct Jaro {
 
 
 pub struct State {
-    pub word1:    Vec<char>,
-    pub word2:    Vec<char>,
-    pub matches1: Vec<bool>,
-    pub matches2: Vec<bool>,
+    pub buffer1: Vec<BufferItem>,
+    pub buffer2: Vec<BufferItem>,
+}
+
+
+#[derive(PartialEq)]
+pub struct BufferItem {
+    pub val: char,
+    pub matched: bool,
+}
+
+
+impl BufferItem {
+    pub fn new(val: char) -> Self {
+        Self { val, matched: false }
+    }
 }
 
 
@@ -62,10 +74,8 @@ impl Jaro {
     pub fn new() -> Self {
         Jaro {
             state: RefCell::new(State {
-                word1:    Vec::with_capacity(DEFAULT_CAPATITY),
-                word2:    Vec::with_capacity(DEFAULT_CAPATITY),
-                matches1: Vec::with_capacity(DEFAULT_CAPATITY),
-                matches2: Vec::with_capacity(DEFAULT_CAPATITY),
+                buffer1: Vec::with_capacity(DEFAULT_CAPATITY),
+                buffer2: Vec::with_capacity(DEFAULT_CAPATITY),
             })
         }
     }
@@ -89,63 +99,48 @@ impl Jaro {
             (_, _) => { }
         }
 
-        let State {
-            word1,
-            word2,
-            matches1,
-            matches2,
-        } = &mut *self.state.borrow_mut();
+        let State { buffer1, buffer2 } = &mut *self.state.borrow_mut();
 
-        word1.rewrite_with(str1.chars());
-        word2.rewrite_with(str2.chars());
-        let prefix = common_prefix_size(word1, word2);
-        let word1 = &word1[prefix..];
-        let word2 = &word2[prefix..];
+        buffer1.rewrite_with(str1.chars().map(BufferItem::new));
+        buffer2.rewrite_with(str2.chars().map(BufferItem::new));
 
-        matches1.clear();
-        matches2.clear();
-        matches1.resize(word1.len(), false);
-        matches2.resize(word2.len(), false);
+        let prefix = common_prefix_size(buffer1, buffer2);
+        let buffer1 = &mut buffer1[prefix..];
+        let buffer2 = &mut buffer2[prefix..];
 
         let mut matches = 0;
-        let mut trans = 0;
 
-        let len1 = word1.len();
-        let len2 = word2.len();
+        let len1 = buffer1.len();
+        let len2 = buffer2.len();
         let i2_range = max!(1, (len1 + prefix) / 2, (len2 + prefix) / 2) - 1;
+        let mut i1 = 0;
 
-        for i1 in 0..len1 {
-            let i2_lower = i1 - min(i2_range, i1);
-            let i2_upper = min(i1 + i2_range + 1, len2);
+        for item1 in buffer1.iter_mut() {
+            let i2_lo = i1 - min(i2_range, i1);
+            let i2_up = min(i1 + i2_range + 1, len2);
+            i1 += 1;
 
-            for i2 in i2_lower..i2_upper {
-                unsafe {
-                    let char1 = word1.get_unchecked(i1);
-                    let char2 = word2.get_unchecked(i2);
-                    let match2 = matches2.get_unchecked_mut(i2);
-                    if !*match2 && char1 == char2 {
-                        let match1 = matches1.get_unchecked_mut(i1);
-                        *match1 = true;
-                        *match2 = true;
-                        matches += 1;
-                        break;
-                    }
+            if i2_lo >= i2_up { continue; }
+
+            for item2 in buffer2[i2_lo..i2_up].iter_mut() {
+                if !item2.matched && item1.val == item2.val {
+                    item1.matched = true;
+                    item2.matched = true;
+                    matches += 1;
+                    break;
                 }
             }
         }
 
         if prefix + matches == 0 { return 0.0; }
 
+        let mut trans = 0;
+
         if matches != 0 {
-            let mut i2 = 0;
-            for i1 in 0..len1 {
-                unsafe {
-                    if !*matches1.get_unchecked(i1) { continue; }
-                    while !*matches2.get_unchecked(i2) { i2 += 1; }
-                    let char1 = word1.get_unchecked(i1);
-                    let char2 = word2.get_unchecked(i2);
-                    if char1 != char2 { trans += 1; }
-                    i2 += 1;
+            let mut matches2 = buffer2.iter().filter(|x| x.matched);
+            for item1 in buffer1.iter().filter(|x| x.matched) {
+                if let Some(item2) = matches2.next() {
+                    if item1.val != item2.val { trans += 1; }
                 }
             }
         }

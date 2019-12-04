@@ -41,19 +41,19 @@ impl<T> Rewrite<T> for Vec<T> {
 }
 
 
-pub fn common_prefix_size(word1: &Vec<char>, word2: &Vec<char>) -> usize {
-    word1.iter().zip(word2.iter())
+pub fn common_prefix_size<T: PartialEq>(slice1: &[T], slice2: &[T]) -> usize {
+    slice1.into_iter().zip(slice2.into_iter())
         .take_while(|(ch1, ch2)| ch1 == ch2)
         .count()
 }
 
 
-pub fn common_affix_sizes(word1: &Vec<char>, word2: &Vec<char>) -> (usize, usize) {
-    let min_len = min(word1.len(), word2.len());
-    let prefix = common_prefix_size(word1, word2);
-    let suffix = word1.iter().rev().zip(word2.iter().rev())
+pub fn common_affix_sizes<T: PartialEq>(slice1: &[T], slice2: &[T]) -> (usize, usize) {
+    let min_len = min(slice1.len(), slice2.len());
+    let prefix = common_prefix_size(slice1, slice2);
+    let suffix = slice1.into_iter().rev().zip(slice2.into_iter().rev())
         .take(min_len - prefix)
-        .take_while(|(ch1, ch2)| ch1 == ch2)
+        .take_while(|(item1, item2)| item1 == item2)
         .count();
     (prefix, suffix)
 }

@@ -102,12 +102,12 @@ impl JaroWinkler {
         let jaro_dist = self.jaro.similarity(str1, str2);
         if jaro_dist == 0. { return 0.; }
 
-        let State { word1, word2, .. } = &*self.jaro.state.borrow();
+        let State { buffer1, buffer2, .. } = &*self.jaro.state.borrow();
 
-        let prefix_size = word1.into_iter()
-            .zip(word2.into_iter())
+        let prefix_size = buffer1.into_iter()
+            .zip(buffer2.into_iter())
             .take(MAX_PREFIX)
-            .take_while(|(ch1, ch2)| ch1 == ch2)
+            .take_while(|(item1, item2)| item1.val == item2.val)
             .count() as f64;
 
         jaro_dist + prefix_size * self.scaling * (1. - jaro_dist)
