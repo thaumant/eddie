@@ -18,7 +18,7 @@
 //! Add this to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! eddie = "0.2"
+//! eddie = "0.3"
 //! ```
 //!
 //!
