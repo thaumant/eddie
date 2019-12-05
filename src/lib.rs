@@ -82,9 +82,9 @@
 //! For example, when comparing common english words you can expect
 //! at least 1.5-2x speedup for any given algorithm except Hamming.
 //!
-//! For the detailed measurements tables see [Benchmarks][1] page.
+//! For the detailed measurements tables see [Benchmarks][6] page.
 //!
-//! [1]: http://github.com/thaumant/eddie/tree/master/benchmarks.md
+//! [6]: http://github.com/thaumant/eddie/tree/master/benchmarks.md
 
 mod utils;
 mod leven;
