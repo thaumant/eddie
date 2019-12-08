@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod tests;
 
+use std::ptr;
 use std::cmp::{min, max};
 
 
@@ -56,4 +57,39 @@ pub fn common_affix_sizes<T: PartialEq>(slice1: &[T], slice2: &[T]) -> (usize, u
         .take_while(|(item1, item2)| item1 == item2)
         .count();
     (prefix, suffix)
+}
+
+pub trait Chars<T> {
+    fn copy_to(self, buffer: &mut Vec<T>);
+}
+
+
+impl Chars<char> for &str {
+    fn copy_to(self, buffer: &mut Vec<char>) {
+        buffer.rewrite_with(self.chars());
+    }
+}
+
+
+impl Chars<char> for &String {
+    fn copy_to(self, buffer: &mut Vec<char>) {
+        buffer.rewrite_with(self.chars());
+    }
+}
+
+
+impl<T: Copy> Chars<T> for &[T] {
+    fn copy_to(self, buffer: &mut Vec<T>) {
+        if self.len() > buffer.len() {
+            buffer.reserve(self.len() - buffer.len());
+        }
+
+        let src = self.as_ptr();
+        let dst = buffer.as_mut_ptr();
+
+        unsafe {
+            ptr::copy_nonoverlapping(src, dst, self.len());
+            buffer.set_len(self.len());
+        }
+    }
 }

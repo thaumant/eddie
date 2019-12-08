@@ -18,7 +18,7 @@ fn equality() {
         "mailbo",
         "mailbox",
     ];
-    for s in sample.iter() {
+    for &s in &sample {
         assert_eq!(lev.distance(s, s), 0);
     }
 }
@@ -35,9 +35,9 @@ fn prefix() {
         (6, "mailbox", "m"),
         (7, "mailbox", ""),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(lev.distance(s1, s2), *d);
-        assert_eq!(lev.distance(s2, s1), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(lev.distance(s1, s2), d);
+        assert_eq!(lev.distance(s2, s1), d);
     }
 }
 
@@ -60,9 +60,9 @@ fn add_del_continuous() {
         (3, "mailbox", "mailbox___"),
         (4, "mailbox", "mailbox____"),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(lev.distance(s1, s2), *d);
-        assert_eq!(lev.distance(s2, s1), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(lev.distance(s1, s2), d);
+        assert_eq!(lev.distance(s2, s1), d);
     }
 }
 
@@ -85,8 +85,8 @@ fn sub_continuous() {
         (3, "mailbox", "mail___"),
         (4, "mailbox", "mai____"),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(lev.distance(s1, s2), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(lev.distance(s1, s2), d);
     }
 }
 
@@ -104,9 +104,9 @@ fn add_del_intermittent() {
         (3, "mailbox", "mailb_o_x_"),
         (4, "mailbox", "mail_b_o_x_"),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(lev.distance(s1, s2), *d);
-        assert_eq!(lev.distance(s2, s1), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(lev.distance(s1, s2), d);
+        assert_eq!(lev.distance(s2, s1), d);
     }
 }
 
@@ -122,8 +122,8 @@ fn sub_intermittent() {
         (2, "mailbox", "mail_o_"),
         (3, "mailbox", "ma_l_o_"),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(lev.distance(s1, s2), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(lev.distance(s1, s2), d);
     }
 }
 
@@ -144,9 +144,9 @@ fn mixed() {
         (4, "dixon",     "dicksonx"),
         (2, "jellyfish", "smellyfish"),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(lev.distance(s1, s2), *d);
-        assert_eq!(lev.distance(s2, s1), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(lev.distance(s1, s2), d);
+        assert_eq!(lev.distance(s2, s1), d);
     }
 }
 
@@ -175,8 +175,8 @@ fn utf_multibyte() {
         (3, "し"),
         (4, ""),
     ];
-    for (d, s2) in sample.iter() {
-        assert_eq!(lev.distance(s1, s2), *d);
+    for &(d, s2) in &sample {
+        assert_eq!(lev.distance(s1, s2), d);
     }
 }
 
@@ -192,9 +192,9 @@ fn rel_dist() {
         (0.857, "mailbox", "boxmail"),
         (0.571, "mailbox", "amliobx"),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(floor3(lev.rel_dist(s1, s2)), *d);
-        assert_eq!(floor3(lev.rel_dist(s2, s1)), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(floor3(lev.rel_dist(s1, s2)), d);
+        assert_eq!(floor3(lev.rel_dist(s2, s1)), d);
     }
 }
 
@@ -210,8 +210,8 @@ fn similarity() {
         (0.142, "mailbox", "boxmail"),
         (0.428, "mailbox", "amliobx"),
     ];
-    for (d, s1, s2) in sample.iter() {
-        assert_eq!(floor3(lev.similarity(s1, s2)), *d);
-        assert_eq!(floor3(lev.similarity(s2, s1)), *d);
+    for &(d, s1, s2) in &sample {
+        assert_eq!(floor3(lev.similarity(s1, s2)), d);
+        assert_eq!(floor3(lev.similarity(s2, s1)), d);
     }
 }

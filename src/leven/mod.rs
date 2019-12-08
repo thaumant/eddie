@@ -2,7 +2,7 @@
 mod tests;
 
 use std::cell::RefCell;
-use crate::utils::{Rewrite, common_affix_sizes};
+use crate::utils::{Chars, Rewrite, common_affix_sizes};
 
 const DEFAULT_CAPACITY: usize = 20;
 
@@ -46,19 +46,19 @@ const DEFAULT_CAPACITY: usize = 20;
 /// let sim = lev.similarity(s1, s2);
 /// assert_eq!(sim, 1.0 - rel);
 /// ```
-pub struct Levenshtein {
-    state: RefCell<State>,
+pub struct Levenshtein<T: PartialEq> {
+    state: RefCell<State<T>>,
 }
 
 
-struct State {
-    word1: Vec<char>,
-    word2: Vec<char>,
+struct State<T: PartialEq> {
+    buffer1: Vec<T>,
+    buffer2: Vec<T>,
     dists: Vec<u8>,
 }
 
 
-impl Levenshtein {
+impl<T: PartialEq> Levenshtein<T> {
     /// Creates a new instance of Levenshtein struct with an internal state
     /// for the metric methods to reuse.
     ///
@@ -67,13 +67,13 @@ impl Levenshtein {
     /// ```rust
     /// use eddie::Levenshtein;
     ///
-    /// let lev = Levenshtein::new();
+    /// let lev: Levenshtein<char> = Levenshtein::new();
     /// ```
     pub fn new() -> Self {
-        let word1 = Vec::with_capacity(DEFAULT_CAPACITY);
-        let word2 = Vec::with_capacity(DEFAULT_CAPACITY);
+        let buffer1 = Vec::with_capacity(DEFAULT_CAPACITY);
+        let buffer2 = Vec::with_capacity(DEFAULT_CAPACITY);
         let dists = Vec::with_capacity(DEFAULT_CAPACITY + 1);
-        let state = State { word1, word2, dists };
+        let state = State { buffer1, buffer2, dists };
         Levenshtein { state: RefCell::new(state) }
     }
 
@@ -89,26 +89,26 @@ impl Levenshtein {
     /// let dist = lev.distance("martha", "marhta");
     /// assert_eq!(dist, 2);
     /// ```
-    pub fn distance(&self, str1: &str, str2: &str) -> usize {
+    pub fn distance<C: Chars<T>>(&self, chars1: C, chars2: C) -> usize {
         let state = &mut *self.state.borrow_mut();
-        let State { word1, word2, dists } = state;
+        let State { buffer1, buffer2, dists } = state;
 
-        word1.rewrite_with(str1.chars());
-        word2.rewrite_with(str2.chars());
-        dists.rewrite_with(1 .. word2.len() as u8 + 2);
+        chars1.copy_to(buffer1);
+        chars2.copy_to(buffer2);
+        dists.rewrite_with(1 .. buffer2.len() as u8 + 2);
 
-        let (prefix, postfix) = common_affix_sizes(word1, word2);
-        let word1 = { let l = word1.len(); &word1[prefix .. l - postfix] };
-        let word2 = { let l = word2.len(); &word2[prefix .. l - postfix] };
+        let (prefix, postfix) = common_affix_sizes(buffer1, buffer2);
+        let buffer1 = { let l = buffer1.len(); &buffer1[prefix .. l - postfix] };
+        let buffer2 = { let l = buffer2.len(); &buffer2[prefix .. l - postfix] };
 
-        let mut dist = word2.len() as u8;
+        let mut dist = buffer2.len() as u8;
         let mut prev;
 
-        for (i1, char1) in word1.into_iter().enumerate() {
+        for (i1, char1) in buffer1.into_iter().enumerate() {
             dist = i1 as u8 + 1;
             prev = i1 as u8;
 
-            for (char2, prev2) in word2.into_iter().zip(dists.into_iter()) {
+            for (char2, prev2) in buffer2.into_iter().zip(dists.into_iter()) {
                 dist = min!(
                     dist + 1,
                     *prev2 + 1,
@@ -133,10 +133,10 @@ impl Levenshtein {
     /// let dist = lev.rel_dist("martha", "marhta");
     /// assert!((dist - 0.333).abs() < 0.001);
     /// ```
-    pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
-        let dist = self.distance(str1, str2);
-        let State { word1, word2, .. } = &*self.state.borrow_mut();
-        let len = max!(1, word1.len(), word2.len());
+    pub fn rel_dist<C: Chars<T>>(&self, chars1: C, chars2: C) -> f64 {
+        let dist = self.distance(chars1, chars2);
+        let State { buffer1, buffer2, .. } = &*self.state.borrow_mut();
+        let len = max!(1, buffer1.len(), buffer2.len());
         dist as f64 / len as f64
     }
 
@@ -151,7 +151,7 @@ impl Levenshtein {
     /// let sim = lev.similarity("martha", "marhta");
     /// assert!((sim - 0.666).abs() < 0.001);
     /// ```
-    pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
-        1.0 - self.rel_dist(str1, str2)
+    pub fn similarity<C: Chars<T>>(&self, chars1: C, chars2: C) -> f64 {
+        1.0 - self.rel_dist(chars1, chars2)
     }
 }

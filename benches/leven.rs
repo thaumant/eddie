@@ -113,7 +113,7 @@ const GEN_SAMPLE_SIZE: usize = 1000;
 
 struct Generator {
     pub sample: Vec<(String, String, usize)>,
-    lv: Levenshtein,
+    lv: Levenshtein<char>,
     rng: ThreadRng,
     len: usize,
     edits: usize,
