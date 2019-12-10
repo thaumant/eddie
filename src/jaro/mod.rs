@@ -46,7 +46,7 @@ pub struct State {
 }
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub struct BufferItem {
     pub val: char,
     pub matched: bool,

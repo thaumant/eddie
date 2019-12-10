@@ -93,6 +93,8 @@ mod hamming;
 mod jaro;
 mod jarwin;
 
+pub mod slice;
+
 pub use crate::leven::Levenshtein;
 pub use crate::damlev::DamerauLevenshtein;
 pub use crate::hamming::Hamming;

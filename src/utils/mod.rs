@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod tests;
 
-use std::ptr;
 use std::cmp::{min, max};
 
 
@@ -16,6 +15,24 @@ macro_rules! min {
 macro_rules! max {
     ($x: expr) => ($x);
     ($x: expr, $($z: expr),+) => (::std::cmp::max($x, max!($($z),*)));
+}
+
+
+pub fn common_prefix_size<T: Copy + PartialEq>(slice1: &[T], slice2: &[T]) -> usize {
+    slice1.into_iter().zip(slice2.into_iter())
+        .take_while(|(ch1, ch2)| ch1 == ch2)
+        .count()
+}
+
+
+pub fn common_affix_sizes<T: Copy + PartialEq>(slice1: &[T], slice2: &[T]) -> (usize, usize) {
+    let min_len = min(slice1.len(), slice2.len());
+    let prefix = common_prefix_size(slice1, slice2);
+    let suffix = slice1.into_iter().rev().zip(slice2.into_iter().rev())
+        .take(min_len - prefix)
+        .take_while(|(item1, item2)| item1 == item2)
+        .count();
+    (prefix, suffix)
 }
 
 
@@ -42,23 +59,6 @@ impl<T> Rewrite<T> for Vec<T> {
 }
 
 
-pub fn common_prefix_size<T: PartialEq>(slice1: &[T], slice2: &[T]) -> usize {
-    slice1.into_iter().zip(slice2.into_iter())
-        .take_while(|(ch1, ch2)| ch1 == ch2)
-        .count()
-}
-
-
-pub fn common_affix_sizes<T: PartialEq>(slice1: &[T], slice2: &[T]) -> (usize, usize) {
-    let min_len = min(slice1.len(), slice2.len());
-    let prefix = common_prefix_size(slice1, slice2);
-    let suffix = slice1.into_iter().rev().zip(slice2.into_iter().rev())
-        .take(min_len - prefix)
-        .take_while(|(item1, item2)| item1 == item2)
-        .count();
-    (prefix, suffix)
-}
-
 pub trait Chars<T> {
     fn copy_to(self, buffer: &mut Vec<T>);
 }
@@ -74,22 +74,5 @@ impl Chars<char> for &str {
 impl Chars<char> for &String {
     fn copy_to(self, buffer: &mut Vec<char>) {
         buffer.rewrite_with(self.chars());
-    }
-}
-
-
-impl<T: Copy> Chars<T> for &[T] {
-    fn copy_to(self, buffer: &mut Vec<T>) {
-        if self.len() > buffer.len() {
-            buffer.reserve(self.len() - buffer.len());
-        }
-
-        let src = self.as_ptr();
-        let dst = buffer.as_mut_ptr();
-
-        unsafe {
-            ptr::copy_nonoverlapping(src, dst, self.len());
-            buffer.set_len(self.len());
-        }
     }
 }
