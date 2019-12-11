@@ -68,12 +68,7 @@ use std::cell::RefCell;
 /// # }
 /// ```
 pub struct Hamming {
-    state: RefCell<State>,
-}
-
-
-pub struct State {
-    len: usize,
+    len: RefCell<usize>,
 }
 
 
@@ -89,8 +84,7 @@ impl Hamming {
     /// let hamming = Hamming::new();
     /// ```
     pub fn new() -> Self {
-        let state = State { len: 0 };
-        Self { state: RefCell::new(state) }
+        Self { len: RefCell::new(0) }
     }
 
     /// Distance metric. Returns a number of positions
@@ -121,8 +115,7 @@ impl Hamming {
                     len += 1;
                 }
                 (None, None) => {
-                    let state = &mut *self.state.borrow_mut();
-                    state.len = len;
+                    *self.len.borrow_mut() = len;
                     return Some(dist);
                 }
                 _ => return None,
@@ -161,8 +154,7 @@ impl Hamming {
             None => None,
             Some(0) => Some(0.0),
             Some(dist) => {
-                let state = &*self.state.borrow();
-                Some(dist as f64 / state.len as f64)
+                Some(dist as f64 / *self.len.borrow() as f64)
             },
         }
     }

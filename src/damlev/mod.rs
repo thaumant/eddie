@@ -1,13 +1,10 @@
-mod matrix;
-
 #[cfg(test)]
 mod tests;
 
-use std::cmp::max;
-use std::collections::BTreeMap;
 use std::cell::RefCell;
-use crate::utils::{Rewrite, common_affix_sizes};
-use matrix::Matrix;
+use crate::utils::Rewrite;
+use crate::slice;
+
 
 const DEFAULT_CAPACITY: usize = 20;
 
@@ -53,15 +50,9 @@ const DEFAULT_CAPACITY: usize = 20;
 /// assert_eq!(sim, 1.0 - rel);
 /// ```
 pub struct DamerauLevenshtein {
-    state: RefCell<State>,
-}
-
-
-struct State {
-    word1:   Vec<char>,
-    word2:   Vec<char>,
-    dists:   Matrix,
-    last_i1: BTreeMap<char, usize>,
+    internal: slice::DamerauLevenshtein<char>,
+    word1: RefCell<Vec<char>>,
+    word2: RefCell<Vec<char>>,
 }
 
 
@@ -77,12 +68,10 @@ impl DamerauLevenshtein {
     /// let damlev = DamerauLevenshtein::new();
     /// ```
     pub fn new() -> Self {
-        let dists = Matrix::new(DEFAULT_CAPACITY + 2);
-        let word1 = Vec::with_capacity(DEFAULT_CAPACITY);
-        let word2 = Vec::with_capacity(DEFAULT_CAPACITY);
-        let last_i1 = BTreeMap::new();
-        let state = State { word1, word2, dists, last_i1 };
-        DamerauLevenshtein { state: RefCell::new(state) }
+        let internal = slice::DamerauLevenshtein::new();
+        let word1 = RefCell::new(Vec::with_capacity(DEFAULT_CAPACITY));
+        let word2 = RefCell::new(Vec::with_capacity(DEFAULT_CAPACITY));
+        Self { internal, word1, word2 }
     }
 
     /// Distance metric. Returns a number of edits
@@ -97,43 +86,12 @@ impl DamerauLevenshtein {
     /// let dist = damlev.distance("martha", "marhta");
     /// assert_eq!(dist, 1);
     /// ```
-    pub fn distance(&self, s1: &str, s2: &str) -> usize {
-        let State { word1, word2, dists, last_i1 } = &mut *self.state.borrow_mut();
-
-        last_i1.clear();
-
-        word1.rewrite_with(s1.chars());
-        word2.rewrite_with(s2.chars());
-        let (prefix, postfix) = common_affix_sizes(word1, word2);
-        let word1 = { let l = word1.len(); &word1[prefix .. l - postfix] };
-        let word2 = { let l = word2.len(); &word2[prefix .. l - postfix] };
-        let len1 = word1.len();
-        let len2 = word2.len();
-
-        dists.grow(max(len1 + 2, len2 + 2));
-
-        for (i1, &char1) in word1.iter().enumerate() {
-            let mut l2 = 0;
-
-            for (i2, &char2) in word2.iter().enumerate() {
-                let l1 = *last_i1.get(&char2).unwrap_or(&0);
-
-                unsafe {
-                    dists.set(i1 + 2, i2 + 2, min!(
-                        dists.get(i1 + 2, i2 + 1) + 1,
-                        dists.get(i1 + 1, i2 + 2) + 1,
-                        dists.get(i1 + 1, i2 + 1) + (char1 != char2) as u8,
-                        dists.get(l1, l2) + (i1 - l1) as u8 + (i2 - l2) as u8 + 1
-                    ));
-                }
-
-                if char1 == char2 { l2 = i2 + 1; }
-            }
-            last_i1.insert(char1, i1 + 1);
-        }
-
-        let dist = unsafe { dists.get(len1 + 1, len2 + 1) };
-        dist as usize
+    pub fn distance(&self, str1: &str, str2: &str) -> usize {
+        let word1 = &mut *self.word1.borrow_mut();
+        let word2 = &mut *self.word2.borrow_mut();
+        word1.rewrite_with(str1.chars());
+        word2.rewrite_with(str2.chars());
+        self.internal.distance(word1, word2)
     }
 
     /// Relative distance metric. Returns a number of edits relative to the length of
@@ -148,10 +106,11 @@ impl DamerauLevenshtein {
     /// assert!((dist - 0.167).abs() < 0.001);
     /// ```
     pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
-        let dist = self.distance(str1, str2);
-        let State { word1, word2, .. } = &*self.state.borrow_mut();
-        let len = max!(1, word1.len(), word2.len());
-        dist as f64 / len as f64
+        let word1 = &mut *self.word1.borrow_mut();
+        let word2 = &mut *self.word2.borrow_mut();
+        word1.rewrite_with(str1.chars());
+        word2.rewrite_with(str2.chars());
+        self.internal.rel_dist(word1, word2)
     }
 
     /// Similarity metric. Inversion of relative distance,
@@ -166,6 +125,10 @@ impl DamerauLevenshtein {
     /// assert!((sim - 0.833).abs() < 0.001);
     /// ```
     pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
-        1.0 - self.rel_dist(str1, str2)
+        let word1 = &mut *self.word1.borrow_mut();
+        let word2 = &mut *self.word2.borrow_mut();
+        word1.rewrite_with(str1.chars());
+        word2.rewrite_with(str2.chars());
+        self.internal.similarity(word1, word2)
     }
 }

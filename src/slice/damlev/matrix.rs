@@ -1,13 +1,13 @@
 
-pub struct Matrix {
+pub struct DistMatrix {
     size: usize,
     raw: Vec<u8>,
 }
 
-impl Matrix {
-    pub fn new(size: usize) -> Matrix {
+impl DistMatrix {
+    pub fn new(size: usize) -> Self {
         let raw = vec![0; size * size];
-        let mut matrix = Matrix { size, raw };
+        let mut matrix = Self { size, raw };
         matrix.init();
         matrix
     }

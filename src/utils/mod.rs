@@ -3,6 +3,8 @@
 #[cfg(test)]
 mod tests;
 
+pub mod zip;
+
 use std::cmp::{min, max};
 
 
@@ -55,24 +57,5 @@ impl<T> Rewrite<T> for Vec<T> {
             i += 1;
         }
         unsafe { self.set_len(i); }
-    }
-}
-
-
-pub trait Chars<T> {
-    fn copy_to(self, buffer: &mut Vec<T>);
-}
-
-
-impl Chars<char> for &str {
-    fn copy_to(self, buffer: &mut Vec<char>) {
-        buffer.rewrite_with(self.chars());
-    }
-}
-
-
-impl Chars<char> for &String {
-    fn copy_to(self, buffer: &mut Vec<char>) {
-        buffer.rewrite_with(self.chars());
     }
 }

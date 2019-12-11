@@ -1,10 +1,12 @@
-use crate::jaro::{Jaro, State};
-
 #[cfg(test)]
 mod tests;
 
-const MAX_PREFIX: usize = 4;
-const DEFAULT_SCALING: f64 = 0.1;
+use std::cell::RefCell;
+use crate::utils::Rewrite;
+use crate::slice;
+
+
+const DEFAULT_CAPATITY: usize = 25;
 
 
 /// # Jaro-Winkler similarity.
@@ -38,8 +40,9 @@ const DEFAULT_SCALING: f64 = 0.1;
 /// assert_eq!(dist, 1.0 - sim);
 /// ```
 pub struct JaroWinkler {
-    scaling: f64,
-    jaro: Jaro,
+    internal: slice::JaroWinkler,
+    buffer1: RefCell<Vec<char>>,
+    buffer2: RefCell<Vec<char>>,
 }
 
 
@@ -55,9 +58,11 @@ impl JaroWinkler {
     /// let jarwin = JaroWinkler::new();
     /// ```
     pub fn new() -> JaroWinkler {
-        let scaling = DEFAULT_SCALING;
-        let jaro = Jaro::new();
-        JaroWinkler { scaling, jaro }
+        Self {
+            internal: slice::JaroWinkler::new(),
+            buffer1:  RefCell::new(Vec::with_capacity(DEFAULT_CAPATITY)),
+            buffer2:  RefCell::new(Vec::with_capacity(DEFAULT_CAPATITY)),
+        }
     }
 
     /// Sets scaling factor for common prefix score boost.
@@ -78,13 +83,7 @@ impl JaroWinkler {
     /// assert!((sim2 - 0.98).abs() < 0.01);
     /// ```
     pub fn set_scaling(&mut self, scaling: f64) {
-        if scaling > 0.25 {
-            panic!("Scaling factor should not be greater than 0.25");
-        }
-        if scaling < 0.0 {
-            panic!("Scaling factor should not be less than 0.0");
-        }
-        self.scaling = scaling;
+        self.internal.set_scaling(scaling);
     }
 
     /// Similarity metric. Reflects how close two strings are,
@@ -98,19 +97,12 @@ impl JaroWinkler {
     /// let sim = jarwin.similarity("martha", "marhta");
     /// assert!((sim - 0.96).abs() < 0.01);
     /// ```
-    pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
-        let jaro_dist = self.jaro.similarity(str1, str2);
-        if jaro_dist == 0. { return 0.; }
-
-        let State { buffer1, buffer2, .. } = &*self.jaro.state.borrow();
-
-        let prefix_size = buffer1.into_iter()
-            .zip(buffer2.into_iter())
-            .take(MAX_PREFIX)
-            .take_while(|(item1, item2)| item1.val == item2.val)
-            .count() as f64;
-
-        jaro_dist + prefix_size * self.scaling * (1. - jaro_dist)
+    pub fn similarity(&self, chars1: &str, chars2: &str) -> f64 {
+        let buffer1 = &mut *self.buffer1.borrow_mut();
+        let buffer2 = &mut *self.buffer2.borrow_mut();
+        buffer1.rewrite_with(chars1.chars());
+        buffer2.rewrite_with(chars2.chars());
+        self.internal.similarity(buffer1, buffer2)
     }
 
     /// Relative distance metric. Inversion of similarity.
@@ -125,7 +117,7 @@ impl JaroWinkler {
     /// let dist = jarwin.rel_dist("martha", "marhta");
     /// assert!((dist - 0.04).abs() < 0.01);
     /// ```
-    pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
-        1.0 - self.similarity(str1, str2)
+    pub fn rel_dist(&self, chars1: &str, chars2: &str) -> f64 {
+        1.0 - self.similarity(chars1, chars2)
     }
 }
