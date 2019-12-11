@@ -3,7 +3,7 @@ mod matrix;
 use std::cmp::max;
 use std::collections::BTreeMap;
 use std::cell::RefCell;
-use crate::utils::{common_affix_sizes};
+use crate::utils::common_affix_sizes;
 use matrix::DistMatrix;
 
 

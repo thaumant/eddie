@@ -1,4 +1,4 @@
-use super::{Jaro, DEFAULT_CAPATITY};
+use super::{Jaro, DEFAULT_CAPACITY};
 
 
 fn floor3(num: f64) -> f64 {
@@ -273,7 +273,7 @@ fn mixed() {
 fn growth() {
     let jaro = Jaro::new();
 
-    for len in 1 .. DEFAULT_CAPATITY * 2 {
+    for len in 1 .. DEFAULT_CAPACITY * 2 {
         let s1 = &"a".repeat(len);
         let s2 = &"b".repeat(len);
         assert_eq!(jaro.similarity(s1, s1), 1.0);

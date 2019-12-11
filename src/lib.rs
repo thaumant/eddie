@@ -87,16 +87,12 @@
 //! [6]: http://github.com/thaumant/eddie/tree/master/benchmarks.md
 
 mod utils;
-mod leven;
-mod damlev;
-mod hamming;
-mod jaro;
-mod jarwin;
 
 pub mod slice;
+pub mod str;
 
-pub use crate::leven::Levenshtein;
-pub use crate::damlev::DamerauLevenshtein;
-pub use crate::hamming::Hamming;
-pub use crate::jaro::Jaro;
-pub use crate::jarwin::JaroWinkler;
+pub use crate::str::Levenshtein;
+pub use crate::str::DamerauLevenshtein;
+pub use crate::str::Hamming;
+pub use crate::str::Jaro;
+pub use crate::str::JaroWinkler;

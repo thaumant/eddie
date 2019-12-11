@@ -1,12 +1,11 @@
 #[cfg(test)]
 mod tests;
 
-use std::cell::RefCell;
 use crate::slice;
-use crate::utils::Rewrite;
+use crate::utils::buffer::Buffer;
 
 
-const DEFAULT_CAPATITY: usize = 25;
+const DEFAULT_CAPACITY: usize = 25;
 
 /// # Jaro similarity.
 ///
@@ -36,9 +35,9 @@ const DEFAULT_CAPATITY: usize = 25;
 /// assert_eq!(dist, 1.0 - sim);
 /// ```
 pub struct Jaro {
-    internal:    slice::Jaro,
-    pub buffer1: RefCell<Vec<char>>,
-    pub buffer2: RefCell<Vec<char>>,
+    sliced: slice::Jaro,
+    buffer1: Buffer<char>,
+    buffer2: Buffer<char>,
 }
 
 
@@ -55,9 +54,9 @@ impl Jaro {
     /// ```
     pub fn new() -> Self {
         Self {
-            internal: slice::Jaro::new(),
-            buffer1:  RefCell::new(Vec::with_capacity(DEFAULT_CAPATITY)),
-            buffer2:  RefCell::new(Vec::with_capacity(DEFAULT_CAPATITY)),
+            sliced: slice::Jaro::new(),
+            buffer1: Buffer::with_capacity(DEFAULT_CAPACITY),
+            buffer2: Buffer::with_capacity(DEFAULT_CAPACITY),
         }
     }
 
@@ -72,18 +71,16 @@ impl Jaro {
     /// let sim = jaro.similarity("martha", "marhta");
     /// assert!((sim - 0.94).abs() < 0.01);
     /// ```
-    pub fn similarity(&self, chars1: &str, chars2: &str) -> f64 {
-        match (chars1.len(), chars2.len()) {
+    pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
+        match (str1.len(), str2.len()) {
             (0, 0) => { return 1.0; }
             (_, 0) => { return 0.0; }
             (0, _) => { return 0.0; }
             (_, _) => { }
         }
-        let buffer1 = &mut *self.buffer1.borrow_mut();
-        let buffer2 = &mut *self.buffer2.borrow_mut();
-        buffer1.rewrite_with(chars1.chars());
-        buffer2.rewrite_with(chars2.chars());
-        self.internal.similarity(buffer1, buffer2)
+        let buf1 = &*self.buffer1.store(str1.chars()).borrow();
+        let buf2 = &*self.buffer2.store(str2.chars()).borrow();
+        self.sliced.similarity(buf1, buf2)
     }
 
     /// Relative distance metric. Inversion of similarity.
@@ -98,17 +95,15 @@ impl Jaro {
     /// let dist = jaro.rel_dist("martha", "marhta");
     /// assert!((dist - 0.06).abs() < 0.01);
     /// ```
-    pub fn rel_dist(&self, chars1: &str, chars2: &str) -> f64 {
-        match (chars1.len(), chars2.len()) {
+    pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
+        match (str1.len(), str2.len()) {
             (0, 0) => { return 0.0; }
             (_, 0) => { return 1.0; }
             (0, _) => { return 1.0; }
             (_, _) => { }
         }
-        let buffer1 = &mut *self.buffer1.borrow_mut();
-        let buffer2 = &mut *self.buffer2.borrow_mut();
-        buffer1.rewrite_with(chars1.chars());
-        buffer2.rewrite_with(chars2.chars());
-        self.internal.rel_dist(buffer1, buffer2)
+        let buf1 = &*self.buffer1.store(str1.chars()).borrow();
+        let buf2 = &*self.buffer2.store(str2.chars()).borrow();
+        self.sliced.rel_dist(buf1, buf2)
     }
 }

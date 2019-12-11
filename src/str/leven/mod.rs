@@ -1,9 +1,8 @@
 #[cfg(test)]
 mod tests;
 
-use std::cell::RefCell;
-use crate::utils::Rewrite;
 use crate::slice;
+use crate::utils::buffer::Buffer;
 
 const DEFAULT_CAPACITY: usize = 20;
 
@@ -48,9 +47,9 @@ const DEFAULT_CAPACITY: usize = 20;
 /// assert_eq!(sim, 1.0 - rel);
 /// ```
 pub struct Levenshtein {
-    internal: slice::Levenshtein,
-    buffer1: RefCell<Vec<char>>,
-    buffer2: RefCell<Vec<char>>,
+    sliced: slice::Levenshtein,
+    buffer1: Buffer<char>,
+    buffer2: Buffer<char>,
 }
 
 
@@ -66,10 +65,10 @@ impl Levenshtein {
     /// let lev: Levenshtein = Levenshtein::new();
     /// ```
     pub fn new() -> Self {
-        let internal = slice::Levenshtein::new();
-        let buffer1 = RefCell::new(Vec::with_capacity(DEFAULT_CAPACITY));
-        let buffer2 = RefCell::new(Vec::with_capacity(DEFAULT_CAPACITY));
-        Self { internal, buffer1, buffer2 }
+        let sliced = slice::Levenshtein::new();
+        let buffer1 = Buffer::with_capacity(DEFAULT_CAPACITY);
+        let buffer2 = Buffer::with_capacity(DEFAULT_CAPACITY);
+        Self { sliced, buffer1, buffer2 }
     }
 
     /// Distance metric. Returns a number of edits
@@ -85,11 +84,9 @@ impl Levenshtein {
     /// assert_eq!(dist, 2);
     /// ```
     pub fn distance(&self, str1: &str, str2: &str) -> usize {
-        let buffer1 = &mut *self.buffer1.borrow_mut();
-        let buffer2 = &mut *self.buffer2.borrow_mut();
-        buffer1.rewrite_with(str1.chars());
-        buffer2.rewrite_with(str2.chars());
-        self.internal.distance(buffer1, buffer2)
+        let buf1 = &*self.buffer1.store(str1.chars()).borrow();
+        let buf2 = &*self.buffer2.store(str2.chars()).borrow();
+        self.sliced.distance(buf1, buf2)
     }
 
     /// Relative distance metric. Returns a number of edits relative to the length of
@@ -104,11 +101,9 @@ impl Levenshtein {
     /// assert!((dist - 0.333).abs() < 0.001);
     /// ```
     pub fn rel_dist(&self, str1: &str, str2: &str) -> f64 {
-        let buffer1 = &mut *self.buffer1.borrow_mut();
-        let buffer2 = &mut *self.buffer2.borrow_mut();
-        buffer1.rewrite_with(str1.chars());
-        buffer2.rewrite_with(str2.chars());
-        self.internal.rel_dist(buffer1, buffer2)
+        let buf1 = &*self.buffer1.store(str1.chars()).borrow();
+        let buf2 = &*self.buffer2.store(str2.chars()).borrow();
+        self.sliced.rel_dist(buf1, buf2)
     }
 
     /// Similarity metric. Inversion of relative distance,
@@ -123,10 +118,8 @@ impl Levenshtein {
     /// assert!((sim - 0.666).abs() < 0.001);
     /// ```
     pub fn similarity(&self, str1: &str, str2: &str) -> f64 {
-        let buffer1 = &mut *self.buffer1.borrow_mut();
-        let buffer2 = &mut *self.buffer2.borrow_mut();
-        buffer1.rewrite_with(str1.chars());
-        buffer2.rewrite_with(str2.chars());
-        self.internal.similarity(buffer1, buffer2)
+        let buf1 = &*self.buffer1.store(str1.chars()).borrow();
+        let buf2 = &*self.buffer2.store(str2.chars()).borrow();
+        self.sliced.similarity(buf1, buf2)
     }
 }

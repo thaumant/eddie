@@ -4,8 +4,9 @@
 mod tests;
 
 pub mod zip;
+pub mod buffer;
 
-use std::cmp::{min, max};
+use std::cmp::min;
 
 
 macro_rules! min {
@@ -35,27 +36,4 @@ pub fn common_affix_sizes<T: Copy + PartialEq>(slice1: &[T], slice2: &[T]) -> (u
         .take_while(|(item1, item2)| item1 == item2)
         .count();
     (prefix, suffix)
-}
-
-
-pub trait Rewrite<T> {
-    fn rewrite_with<Items: Iterator<Item=T>>(&mut self, items: Items);
-}
-
-
-impl<T> Rewrite<T> for Vec<T> {
-    fn rewrite_with<Items: Iterator<Item=T>>(&mut self, items: Items) {
-        self.clear();
-        let mut cap = self.capacity();
-        let mut i = 0;
-        for item in items {
-            if i >= cap {
-                self.reserve(max(cap * 2, 1));
-                cap = self.capacity();
-            }
-            unsafe { *self.get_unchecked_mut(i) = item; }
-            i += 1;
-        }
-        unsafe { self.set_len(i); }
-    }
 }

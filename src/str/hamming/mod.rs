@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use std::cell::RefCell;
+use std::cell::Cell;
 
 
 /// # Hamming distance.
@@ -68,7 +68,7 @@ use std::cell::RefCell;
 /// # }
 /// ```
 pub struct Hamming {
-    len: RefCell<usize>,
+    len: Cell<usize>,
 }
 
 
@@ -84,7 +84,7 @@ impl Hamming {
     /// let hamming = Hamming::new();
     /// ```
     pub fn new() -> Self {
-        Self { len: RefCell::new(0) }
+        Self { len: Cell::new(0) }
     }
 
     /// Distance metric. Returns a number of positions
@@ -115,7 +115,7 @@ impl Hamming {
                     len += 1;
                 }
                 (None, None) => {
-                    *self.len.borrow_mut() = len;
+                    self.len.set(len);
                     return Some(dist);
                 }
                 _ => return None,
@@ -154,7 +154,7 @@ impl Hamming {
             None => None,
             Some(0) => Some(0.0),
             Some(dist) => {
-                Some(dist as f64 / *self.len.borrow() as f64)
+                Some(dist as f64 / self.len.get() as f64)
             },
         }
     }

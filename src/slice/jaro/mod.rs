@@ -5,7 +5,7 @@ use crate::utils::common_prefix_size;
 use crate::utils::zip::Zippable;
 
 
-const DEFAULT_CAPATITY: usize = 25;
+const DEFAULT_CAPACITY: usize = 25;
 
 
 pub struct Jaro {
@@ -17,8 +17,8 @@ pub struct Jaro {
 impl Jaro {
     pub fn new() -> Self {
         Self {
-            matches1: RefCell::new(Vec::with_capacity(DEFAULT_CAPATITY)),
-            matches2: RefCell::new(Vec::with_capacity(DEFAULT_CAPATITY)),
+            matches1: RefCell::new(Vec::with_capacity(DEFAULT_CAPACITY)),
+            matches2: RefCell::new(Vec::with_capacity(DEFAULT_CAPACITY)),
         }
     }
 

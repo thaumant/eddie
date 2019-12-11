@@ -1,25 +1,22 @@
-use std::cell::RefCell;
-use crate::utils::{Rewrite, common_affix_sizes};
+use crate::utils::common_affix_sizes;
+use crate::utils::buffer::Buffer;
 
 
 const DEFAULT_CAPACITY: usize = 20;
 
 
 pub struct Levenshtein {
-  dists: RefCell<Vec<u8>>,
+  dists: Buffer<u8>,
 }
 
 
 impl Levenshtein {
   pub fn new() -> Self {
-      let dists = Vec::with_capacity(DEFAULT_CAPACITY + 1);
-      Self { dists: RefCell::new(dists) }
+      Self { dists: Buffer::with_capacity(DEFAULT_CAPACITY + 1) }
   }
 
   pub fn distance<T: PartialEq + Copy>(&self, chars1: &[T], chars2: &[T]) -> usize {
-      let dists = &mut *self.dists.borrow_mut();
-
-      dists.rewrite_with(1 .. chars2.len() as u8 + 2);
+      let dists = &mut *self.dists.store(1 .. chars2.len() as u8 + 2).borrow_mut();
 
       let (prefix, postfix) = common_affix_sizes(chars1, chars2);
       let chars1 = { let l = chars1.len(); &chars1[prefix .. l - postfix] };
