@@ -2,7 +2,7 @@ use std::cmp::min;
 use std::ops::Range;
 use std::cell::RefCell;
 use crate::utils::common_prefix_size;
-use crate::utils::zip::Zippable;
+use crate::utils::Zippable;
 
 
 const DEFAULT_CAPACITY: usize = 25;

@@ -3,6 +3,7 @@ mod damlev;
 mod hamming;
 mod jaro;
 mod jarwin;
+mod matrix;
 
 pub use leven::Levenshtein;
 pub use damlev::DamerauLevenshtein;
