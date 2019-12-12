@@ -78,8 +78,9 @@ impl JaroWinkler {
     /// assert!((sim1 - 0.96).abs() < 0.01);
     /// assert!((sim2 - 0.98).abs() < 0.01);
     /// ```
-    pub fn set_scaling(&mut self, scaling: f64) {
+    pub fn set_scaling(&mut self, scaling: f64) -> &mut Self {
         self.sliced.set_scaling(scaling);
+        self
     }
 
     /// Similarity metric. Reflects how close two strings are,

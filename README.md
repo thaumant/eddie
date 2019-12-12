@@ -66,6 +66,29 @@ let sim = jarwin.similarity("martha", "marhta");
 assert!((sim - 0.96).abs() < 0.01);
 ```
 
+
+## Strings vs slices
+
+The crate exposes two modules containing two sets of implementations:
+- `eddie::str` for comparing UTF-8 encoded `&str` and `&String` values.
+  Implementations are reexported in the root module.
+- `eddie::slice` for comparing generic slices `&[T]`.
+  Implementations in this module are significantly faster than those from `eddie::str`,
+  but will produce incorrect results for UTF-8 and other variable width character encodings.
+
+Usage example:
+
+```rust
+use eddie::slice::Levenshtein;
+
+let lev = Levenshtein::new();
+let dist = lev.distance(&[1, 2, 3], &[1, 3]);
+assert_eq!(dist, 1);
+```
+
+[2]: https://doc.rust-lang.org/std/primitive.char.html
+
+
 ## Complementary metrics
 
 The main metric methods are complemented with inverted and/or relative versions.
@@ -81,6 +104,6 @@ At the moment Eddie has the fastest implementations among the alternatives from 
 
 For example, when comparing common english words you can expect at least 1.5-2x speedup for any given algorithm except Hamming.
 
-For the detailed measurements tables see [Benchmarks][2] page.
+For the detailed measurements tables see [Benchmarks][3] page.
 
-[2]: http://github.com/thaumant/eddie/tree/master/benchmarks.md
+[3]: http://github.com/thaumant/eddie/tree/master/benchmarks.md

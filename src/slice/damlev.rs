@@ -7,7 +7,46 @@ use super::matrix::DistMatrix;
 
 const DEFAULT_CAPACITY: usize = 20;
 
-
+/// # Damerau-Levenshtein distance.
+///
+/// See [the detailed description][1].
+///
+/// [1]: https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance
+///
+/// # Usage
+///
+/// ```rust
+/// use eddie::slice::DamerauLevenshtein;
+///
+/// let damlev = DamerauLevenshtein::new();
+/// let dist = damlev.distance(&[1, 2, 3, 4, 5], &[1, 3, 2, 4, 5]);
+/// assert_eq!(dist, 1);
+/// ```
+///
+/// # Complementary metrics
+///
+/// Relative distance:
+/// ```rust
+/// # use std::cmp::max;
+/// # let damlev = eddie::slice::DamerauLevenshtein::new();
+/// # let s1 = &[1, 2, 3, 4, 5];
+/// # let s2 = &[1, 3, 2, 4, 5];
+/// let dist = damlev.distance(s1, s2);
+/// let rel = damlev.rel_dist(s1, s2);
+/// let max_len = max(s1.len(), s2.len());
+/// assert_eq!(rel, dist as f64 / max_len as f64);
+/// ```
+///
+/// Similarity:
+/// ```rust
+/// # use std::cmp::max;
+/// # let damlev = eddie::slice::DamerauLevenshtein::new();
+/// # let s1 = &[1, 2, 3, 4, 5];
+/// # let s2 = &[1, 3, 2, 4, 5];
+/// let rel = damlev.rel_dist(s1, s2);
+/// let sim = damlev.similarity(s1, s2);
+/// assert_eq!(sim, 1.0 - rel);
+/// ```
 pub struct DamerauLevenshtein<T: PartialEq + Copy + Ord> {
     dists:   RefCell<DistMatrix>,
     last_i1: RefCell<BTreeMap<T, usize>>,
@@ -15,57 +54,273 @@ pub struct DamerauLevenshtein<T: PartialEq + Copy + Ord> {
 
 
 impl<T: PartialEq + Copy + Ord> DamerauLevenshtein<T> {
+    /// Creates a new instance of DamerauLevenshtein struct with
+    /// an internal state for the metric methods to reuse.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use eddie::slice::DamerauLevenshtein;
+    ///
+    /// let damlev: DamerauLevenshtein<usize> = DamerauLevenshtein::new();
+    /// ```
     pub fn new() -> Self {
         let dists   = RefCell::new(DistMatrix::new(DEFAULT_CAPACITY + 2));
         let last_i1 = RefCell::new(BTreeMap::new());
         Self { dists, last_i1 }
     }
 
-    pub fn distance(&self, chars1: &[T], chars2: &[T]) -> usize {
+    /// Distance metric. Returns a number of edits
+    /// (character additions, deletions, substitutions, and transpositions)
+    /// required to transform one slice into the other.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use eddie::slice::DamerauLevenshtein;
+    /// # let damlev = DamerauLevenshtein::new();
+    /// let dist = damlev.distance(&[1, 2, 3, 4, 5], &[1, 3, 2, 4, 5]);
+    /// assert_eq!(dist, 1);
+    /// ```
+    pub fn distance(&self, slice1: &[T], slice2: &[T]) -> usize {
         let dists   = &mut *self.dists.borrow_mut();
         let last_i1 = &mut *self.last_i1.borrow_mut();
 
         last_i1.clear();
 
-        let (prefix, postfix) = common_affix_sizes(chars1, chars2);
-        let chars1 = { let len = chars1.len(); &chars1[prefix .. len - postfix] };
-        let chars2 = { let len = chars2.len(); &chars2[prefix .. len - postfix] };
-        let len1 = chars1.len();
-        let len2 = chars2.len();
+        let (prefix, postfix) = common_affix_sizes(slice1, slice2);
+        let slice1 = { let len = slice1.len(); &slice1[prefix .. len - postfix] };
+        let slice2 = { let len = slice2.len(); &slice2[prefix .. len - postfix] };
+        let len1 = slice1.len();
+        let len2 = slice2.len();
 
         dists.grow(max(len1 + 2, len2 + 2));
 
-        for (i1, &char1) in chars1.iter().enumerate() {
+        for (i1, &x1) in slice1.iter().enumerate() {
             let mut l2 = 0;
 
-            for (i2, &char2) in chars2.iter().enumerate() {
-                let l1 = *last_i1.get(&char2).unwrap_or(&0);
+            for (i2, &x2) in slice2.iter().enumerate() {
+                let l1 = *last_i1.get(&x2).unwrap_or(&0);
 
                 unsafe {
                     dists.set(i1 + 2, i2 + 2, min!(
                         dists.get(i1 + 2, i2 + 1) + 1,
                         dists.get(i1 + 1, i2 + 2) + 1,
-                        dists.get(i1 + 1, i2 + 1) + (char1 != char2) as u8,
+                        dists.get(i1 + 1, i2 + 1) + (x1 != x2) as u8,
                         dists.get(l1, l2) + (i1 - l1) as u8 + (i2 - l2) as u8 + 1
                     ));
                 }
 
-                if char1 == char2 { l2 = i2 + 1; }
+                if x1 == x2 { l2 = i2 + 1; }
             }
-            last_i1.insert(char1, i1 + 1);
+            last_i1.insert(x1, i1 + 1);
         }
 
         let dist = unsafe { dists.get(len1 + 1, len2 + 1) };
         dist as usize
     }
 
-    pub fn rel_dist(&self, chars1: &[T], chars2: &[T]) -> f64 {
-        let dist = self.distance(chars1, chars2);
-        let len = max!(1, chars1.len(), chars2.len());
+    /// Relative distance metric. Returns a number of edits relative to the length of
+    /// the longest slice, ranging from 0.0 (equality) to 1.0 (nothing in common).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use eddie::slice::DamerauLevenshtein;
+    /// # let damlev = DamerauLevenshtein::new();
+    /// let dist = damlev.rel_dist(&[1, 2, 3, 4, 5], &[1, 3, 2, 4, 5]);
+    /// assert!((dist - 0.2).abs() < 0.001);
+    /// ```
+    pub fn rel_dist(&self, slice1: &[T], slice2: &[T]) -> f64 {
+        let dist = self.distance(slice1, slice2);
+        let len = max!(1, slice1.len(), slice2.len());
         dist as f64 / len as f64
     }
 
-    pub fn similarity(&self, chars1: &[T], chars2: &[T]) -> f64 {
-        1.0 - self.rel_dist(chars1, chars2)
+    /// Similarity metric. Inversion of relative distance,
+    /// ranging from 1.0 (equality) to 0.0 (nothing in common).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use eddie::slice::DamerauLevenshtein;
+    /// # let damlev = DamerauLevenshtein::new();
+    /// let sim = damlev.similarity(&[1, 2, 3, 4, 5], &[1, 3, 2, 4, 5]);
+    /// assert!((sim - 0.8).abs() < 0.001);
+    /// ```
+    pub fn similarity(&self, slice1: &[T], slice2: &[T]) -> f64 {
+        1.0 - self.rel_dist(slice1, slice2)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::{DamerauLevenshtein, DEFAULT_CAPACITY};
+
+    #[test]
+    fn equality() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            vec![],
+            vec![1],
+            vec![1, 2],
+            vec![1, 2, 3],
+        ];
+        for s in sample.iter() {
+            assert_eq!(damlev.distance(s, s), 0);
+        }
+    }
+
+    #[test]
+    fn prefix() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (0, vec![1, 2, 3], vec![1, 2, 3]),
+            (1, vec![1, 2, 3], vec![1, 2]),
+            (2, vec![1, 2, 3], vec![1]),
+            (3, vec![1, 2, 3], vec![]),
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.distance(s1, s2), *d);
+            assert_eq!(damlev.distance(s2, s1), *d);
+        }
+    }
+
+    #[test]
+    fn add_del_continuous() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (1, vec![1, 2, 3], vec![0, 1, 2, 3]),
+            (2, vec![1, 2, 3], vec![0, 0, 1, 2, 3]),
+            (3, vec![1, 2, 3], vec![0, 0, 0, 1, 2, 3]),
+
+            (1, vec![1, 2, 3], vec![1, 0, 2, 3]),
+            (2, vec![1, 2, 3], vec![1, 0, 0, 2, 3]),
+            (3, vec![1, 2, 3], vec![1, 0, 0, 0, 2, 3]),
+
+            (1, vec![1, 2, 3], vec![1, 2, 3, 0]),
+            (2, vec![1, 2, 3], vec![1, 2, 3, 0, 0]),
+            (3, vec![1, 2, 3], vec![1, 2, 3, 0, 0, 0]),
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.distance(s1, s2), *d);
+            assert_eq!(damlev.distance(s2, s1), *d);
+        }
+    }
+
+    #[test]
+    fn sub_continuous() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (1, vec![1, 2, 3, 4], vec![0, 2, 3, 4]),
+            (2, vec![1, 2, 3, 4], vec![0, 0, 3, 4]),
+            (3, vec![1, 2, 3, 4], vec![0, 0, 0, 4]),
+
+            (1, vec![1, 2, 3, 4], vec![1, 0, 3, 4]),
+            (2, vec![1, 2, 3, 4], vec![1, 0, 0, 4]),
+
+            (1, vec![1, 2, 3, 4], vec![1, 2, 3, 0]),
+            (2, vec![1, 2, 3, 4], vec![1, 2, 0, 0]),
+            (3, vec![1, 2, 3, 4], vec![1, 0, 0, 0]),
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.distance(s1, s2), *d);
+        }
+    }
+
+    #[test]
+    fn trans_continuous() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (1, vec![1, 2, 3, 4], vec![2, 1, 3, 4]), // swap 1 and 2
+            (2, vec![1, 2, 3, 4], vec![2, 1, 4, 3]), // swap 3 and 4
+            (3, vec![1, 2, 3, 4], vec![2, 4, 1, 3]), // swap 1 and 4
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.distance(s1, s2), *d);
+        }
+    }
+
+    #[test]
+    fn add_del_intermittent() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (1, vec![1, 2, 3], vec![0, 1, 2, 3]),
+            (2, vec![1, 2, 3], vec![0, 1, 0, 2, 3]),
+            (3, vec![1, 2, 3], vec![0, 1, 0, 2, 0, 3]),
+
+            (1, vec![1, 2, 3], vec![1, 2, 3, 0]),
+            (2, vec![1, 2, 3], vec![1, 2, 0, 3, 0]),
+            (3, vec![1, 2, 3], vec![1, 0, 2, 0, 3, 0]),
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.distance(s1, s2), *d);
+            assert_eq!(damlev.distance(s2, s1), *d);
+        }
+    }
+
+    #[test]
+    fn sub_intermittent() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (1, vec![1, 2, 3, 4], vec![0, 2, 3, 4]),
+            (2, vec![1, 2, 3, 4], vec![0, 2, 0, 4]),
+
+            (1, vec![1, 2, 3, 4], vec![1, 2, 3, 0]),
+            (2, vec![1, 2, 3, 4], vec![1, 0, 3, 0]),
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.distance(s1, s2), *d);
+        }
+    }
+
+    #[test]
+    fn growth() {
+        let damlev = DamerauLevenshtein::new();
+
+        for len in DEFAULT_CAPACITY + 1 .. DEFAULT_CAPACITY * 2 {
+            let v1: Vec<&usize> = [1].into_iter().cycle().take(len).collect();
+            let v2: Vec<&usize> = [2].into_iter().cycle().take(len).collect();
+            assert_eq!(damlev.distance(&v1, &v1), 0);
+            assert_eq!(damlev.distance(&v1, &[]), len);
+            assert_eq!(damlev.distance(&v1, &v2), len);
+        }
+    }
+
+    #[test]
+    fn rel_dist() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (0.00, vec![],           vec![]),
+            (1.00, vec![1, 2, 3, 4], vec![]),
+            (0.50, vec![1, 2, 3, 4], vec![1, 2]),
+            (0.20, vec![1, 2, 3, 4], vec![1, 2, 0, 3, 4]),
+            (0.50, vec![1, 2, 3, 4], vec![0, 0, 3, 4]),
+            (1.00, vec![1, 2, 3, 4], vec![3, 4, 1, 2]),
+            (0.50, vec![1, 2, 3, 4], vec![2, 1, 4, 3]),
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.rel_dist(s1, s2), *d);
+            assert_eq!(damlev.rel_dist(s2, s1), *d);
+        }
+    }
+
+    #[test]
+    fn similarity() {
+        let damlev = DamerauLevenshtein::new();
+        let sample = [
+            (1.00, vec![],           vec![]),
+            (0.00, vec![1, 2, 3, 4], vec![]),
+            (0.50, vec![1, 2, 3, 4], vec![1, 2]),
+            (0.80, vec![1, 2, 3, 4], vec![1, 2, 0, 3, 4]),
+            (0.50, vec![1, 2, 3, 4], vec![0, 0, 3, 4]),
+            (0.00, vec![1, 2, 3, 4], vec![3, 4, 1, 2]),
+            (0.50, vec![1, 2, 3, 4], vec![2, 1, 4, 3]),
+        ];
+        for (d, s1, s2) in sample.iter() {
+            assert_eq!(damlev.similarity(s1, s2), *d);
+            assert_eq!(damlev.similarity(s2, s1), *d);
+        }
     }
 }

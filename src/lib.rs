@@ -1,5 +1,4 @@
-//! Fast and well-tested implementations of edit distance/string similarity
-//! metrics:
+//! Fast and well-tested implementations of edit distance/string similarity metrics:
 //! - [Levenshtein][1],
 //! - [Damerau-Levenshtein][2],
 //! - [Hamming][3],
@@ -74,6 +73,28 @@
 //! - `similarity` — similarity between two strings (inversion of relative distance).
 //!
 //!
+//! ## Strings vs slices
+//!
+//! The crate exposes two modules containing two sets of implementations:
+//! - `eddie::str` for comparing UTF-8 encoded `&str` and `&String` values.
+//!   Implementations are reexported in the root module.
+//! - `eddie::slice` for comparing generic slices `&[T]`.
+//!   Implementations in this module are significantly faster than those from `eddie::str`,
+//!   but will produce incorrect results for UTF-8 and other variable width character encodings.
+//!
+//! Usage example:
+//!
+//! ```rust
+//! use eddie::slice::Levenshtein;
+//!
+//! let lev = Levenshtein::new();
+//! let dist = lev.distance(&[1, 2, 3, 4], &[1, 3, 2, 4]);
+//! assert_eq!(dist, 2);
+//! ```
+//!
+//! [6]: https://doc.rust-lang.org/std/primitive.char.html
+//!
+//!
 //! # Performance
 //!
 //! At the moment Eddie has the fastest implementations among the alternatives from crates.io
@@ -82,9 +103,9 @@
 //! For example, when comparing common english words you can expect
 //! at least 1.5-2x speedup for any given algorithm except Hamming.
 //!
-//! For the detailed measurements tables see [Benchmarks][6] page.
+//! For the detailed measurements tables see [Benchmarks][7] page.
 //!
-//! [6]: http://github.com/thaumant/eddie/tree/master/benchmarks.md
+//! [7]: http://github.com/thaumant/eddie/tree/master/benchmarks.md
 
 mod utils;
 

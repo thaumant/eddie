@@ -17,7 +17,7 @@ use std::cell::Cell;
 /// assert_eq!(dist, Some(2));
 /// ```
 ///
-/// Returns `None` if string have different lengths:
+/// Returns `None` if strings have different lengths:
 /// ```rust
 /// # let hamming = eddie::Hamming::new();
 /// let dist = hamming.distance("martha", "march");
