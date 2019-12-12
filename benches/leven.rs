@@ -26,7 +26,7 @@ pub fn leven_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
-                    let (s1, s2, _) = &gen.next();
+                    let (s1, s2) = &gen.next();
                     leven.distance(s1, s2)
                 });
             }
@@ -38,7 +38,7 @@ pub fn leven_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
-                    let (s1, s2, _) = &gen.next();
+                    let (s1, s2) = &gen.next();
                     strsim::levenshtein(s1, s2)
                 });
             }
@@ -50,7 +50,7 @@ pub fn leven_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
-                    let (s1, s2, _) = &gen.next();
+                    let (s1, s2) = &gen.next();
                     distance::levenshtein(s1, s2)
                 });
             }
@@ -62,7 +62,7 @@ pub fn leven_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
-                    let (s1, s2, _) = &gen.next();
+                    let (s1, s2) = &gen.next();
                     edit_distance::edit_distance(s1, s2)
                 });
             }
@@ -74,7 +74,7 @@ pub fn leven_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
-                    let (s1, s2, _) = &gen.next();
+                    let (s1, s2) = &gen.next();
                     txtdist::levenshtein(s1, s2)
                 });
             }
@@ -86,7 +86,7 @@ pub fn leven_benchmark(cr: &mut Criterion) {
             |bench, _| {
                 let mut gen = Generator::new(*size, 2);
                 bench.iter(|| {
-                    let (s1, s2, _) = &gen.next();
+                    let (s1, s2) = &gen.next();
                     natural::distance::levenshtein_distance(s1, s2)
                 });
             }
@@ -112,8 +112,7 @@ const GEN_SAMPLE_SIZE: usize = 1000;
 
 
 struct Generator {
-    pub sample: Vec<(String, String, usize)>,
-    lv: Levenshtein,
+    pub sample: Vec<(String, String)>,
     rng: ThreadRng,
     len: usize,
     edits: usize,
@@ -126,16 +125,15 @@ impl Generator {
     pub fn new(len: usize, edits: usize) -> Generator {
         let chars = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let rng = rand::thread_rng();
-        let lv = Levenshtein::new();
         let sample = Vec::with_capacity(GEN_SAMPLE_SIZE);
         let i = 0;
-        let mut gen = Generator { lv, rng, len, edits, chars, sample, i };
+        let mut gen = Generator { rng, len, edits, chars, sample, i };
         gen.fill();
         gen
     }
 
     #[inline]
-    pub fn next<'a>(&'a mut self) -> &'a (String, String, usize) {
+    pub fn next<'a>(&'a mut self) -> &'a (String, String) {
         let i = self.i;
         if self.i >= self.sample.len() { self.i = 0; }
         &self.sample[i]
@@ -146,8 +144,7 @@ impl Generator {
             let w1 = self.gen_word();
             // let w2 = self.gen_word();
             let w2 = self.edit(&w1, self.edits);
-            let d = self.lv.distance(&w1, &w2);
-            self.sample.push((w1, w2, d));
+            self.sample.push((w1, w2));
         }
         self
     }
