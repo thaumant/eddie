@@ -327,4 +327,19 @@ mod tests {
             assert_eq!(floor3(jarwin.rel_dist(s2, s1)), *d);
         }
     }
+
+
+    #[test]
+    fn growth() {
+        let jarwin = JaroWinkler::new();
+        for len in (1..1001).step_by(100) {
+            let mut v1 = Vec::with_capacity(len);
+            let mut v2 = Vec::with_capacity(len);
+            v1.resize(len, 1);
+            v2.resize(len, 2);
+            assert_eq!(jarwin.similarity(&v1, &v1), 1.0);
+            assert_eq!(jarwin.similarity(&v1, &[]), 0.0);
+            assert_eq!(jarwin.similarity(&v1, &v2), 0.0);
+        }
+    }
 }

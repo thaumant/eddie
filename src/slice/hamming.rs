@@ -288,4 +288,18 @@ mod tests {
             assert_eq!(hamming.similarity(s2, s1).map(floor3), *d);
         }
     }
+
+    #[test]
+    fn growth() {
+        let hamming = Hamming::new();
+        for len in (1..1001).step_by(100) {
+            let mut v1 = Vec::with_capacity(len);
+            let mut v2 = Vec::with_capacity(len);
+            v1.resize(len, 1);
+            v2.resize(len, 2);
+            assert_eq!(hamming.distance(&v1, &[]), None);
+            assert_eq!(hamming.distance(&v1, &v1), Some(0));
+            assert_eq!(hamming.distance(&v1, &v2), Some(len));
+        }
+    }
 }

@@ -162,7 +162,7 @@ fn some_if<T>(cond: bool, val: T) -> Option<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Jaro, DEFAULT_CAPACITY};
+    use super::Jaro;
 
     fn floor3(num: f64) -> f64 {
         let p = 10usize.pow(3) as f64;
@@ -343,19 +343,6 @@ mod tests {
 
 
     #[test]
-    fn growth() {
-        let jaro = Jaro::new();
-
-        for len in 1 .. DEFAULT_CAPACITY * 2 {
-            let s1: Vec<&usize> = [1].into_iter().cycle().take(len).collect();
-            let s2: Vec<&usize> = [2].into_iter().cycle().take(len).collect();
-            assert_eq!(jaro.similarity(&s1, &s1), 1.0);
-            assert_eq!(jaro.similarity(&s1, &s2), 0.0);
-        }
-    }
-
-
-    #[test]
     fn rel_dist() {
         let jaro = Jaro::new();
         let sample = [
@@ -372,6 +359,21 @@ mod tests {
         for (d, s1, s2) in sample.iter() {
             assert_eq!(floor3(jaro.rel_dist(s1, s2)), *d);
             assert_eq!(floor3(jaro.rel_dist(s2, s1)), *d);
+        }
+    }
+
+
+    #[test]
+    fn growth() {
+        let jaro = Jaro::new();
+        for len in (1..1001).step_by(100) {
+            let mut v1 = Vec::with_capacity(len);
+            let mut v2 = Vec::with_capacity(len);
+            v1.resize(len, 1);
+            v2.resize(len, 2);
+            assert_eq!(jaro.similarity(&v1, &v1), 1.0);
+            assert_eq!(jaro.similarity(&v1, &[]), 0.0);
+            assert_eq!(jaro.similarity(&v1, &v2), 0.0);
         }
     }
 }

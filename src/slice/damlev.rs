@@ -106,8 +106,8 @@ impl<T: PartialEq + Copy + Ord> DamerauLevenshtein<T> {
                     dists.set(i1 + 2, i2 + 2, min!(
                         dists.get(i1 + 2, i2 + 1) + 1,
                         dists.get(i1 + 1, i2 + 2) + 1,
-                        dists.get(i1 + 1, i2 + 1) + (x1 != x2) as u8,
-                        dists.get(l1, l2) + (i1 - l1) as u8 + (i2 - l2) as u8 + 1
+                        dists.get(i1 + 1, i2 + 1) + (x1 != x2) as usize,
+                        dists.get(l1, l2) + (i1 - l1) + (i2 - l2) + 1
                     ));
                 }
 
@@ -117,7 +117,7 @@ impl<T: PartialEq + Copy + Ord> DamerauLevenshtein<T> {
         }
 
         let dist = unsafe { dists.get(len1 + 1, len2 + 1) };
-        dist as usize
+        dist
     }
 
     /// Relative distance metric. Returns a number of edits relative to the length of
@@ -156,7 +156,7 @@ impl<T: PartialEq + Copy + Ord> DamerauLevenshtein<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{DamerauLevenshtein, DEFAULT_CAPACITY};
+    use super::DamerauLevenshtein;
 
     #[test]
     fn equality() {
@@ -276,19 +276,6 @@ mod tests {
     }
 
     #[test]
-    fn growth() {
-        let damlev = DamerauLevenshtein::new();
-
-        for len in DEFAULT_CAPACITY + 1 .. DEFAULT_CAPACITY * 2 {
-            let v1: Vec<&usize> = [1].into_iter().cycle().take(len).collect();
-            let v2: Vec<&usize> = [2].into_iter().cycle().take(len).collect();
-            assert_eq!(damlev.distance(&v1, &v1), 0);
-            assert_eq!(damlev.distance(&v1, &[]), len);
-            assert_eq!(damlev.distance(&v1, &v2), len);
-        }
-    }
-
-    #[test]
     fn rel_dist() {
         let damlev = DamerauLevenshtein::new();
         let sample = [
@@ -321,6 +308,20 @@ mod tests {
         for (d, s1, s2) in sample.iter() {
             assert_eq!(damlev.similarity(s1, s2), *d);
             assert_eq!(damlev.similarity(s2, s1), *d);
+        }
+    }
+
+    #[test]
+    fn growth() {
+        let damlev = DamerauLevenshtein::new();
+        for len in (1..1001).step_by(100) {
+            let mut v1 = Vec::with_capacity(len);
+            let mut v2 = Vec::with_capacity(len);
+            v1.resize(len, 1);
+            v2.resize(len, 2);
+            assert_eq!(damlev.distance(&v1, &v1), 0);
+            assert_eq!(damlev.distance(&v1, &[]), len);
+            assert_eq!(damlev.distance(&v1, &v2), len);
         }
     }
 }

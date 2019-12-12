@@ -1,7 +1,7 @@
 use crate::utils::{common_affix_sizes, Buffer};
 
 
-const DEFAULT_CAPACITY: usize = 20;
+const DEFAULT_CAPACITY: usize = 25;
 
 
 /// # Levenshtein distance.
@@ -45,7 +45,7 @@ const DEFAULT_CAPACITY: usize = 20;
 /// assert_eq!(sim, 1.0 - rel);
 /// ```
 pub struct Levenshtein {
-    dists: Buffer<u8>,
+    dists: Buffer<usize>,
 }
 
 
@@ -77,31 +77,31 @@ impl Levenshtein {
     /// assert_eq!(dist, 2);
     /// ```
     pub fn distance<T: PartialEq + Copy>(&self, slice1: &[T], slice2: &[T]) -> usize {
-        let dists = &mut *self.dists.store(1 .. slice2.len() as u8 + 2).borrow_mut();
+        let dists = &mut *self.dists.store(1 .. slice2.len() + 2).borrow_mut();
 
         let (prefix, postfix) = common_affix_sizes(slice1, slice2);
         let slice1 = { let len = slice1.len(); &slice1[prefix .. len - postfix] };
         let slice2 = { let len = slice2.len(); &slice2[prefix .. len - postfix] };
 
-        let mut dist = slice2.len() as u8;
+        let mut dist = slice2.len();
         let mut prev;
 
         for (i1, x1) in slice1.into_iter().enumerate() {
-            dist = i1 as u8 + 1;
-            prev = i1 as u8;
+            dist = i1 + 1;
+            prev = i1;
 
             for (x2, prev2) in slice2.into_iter().zip(dists.into_iter()) {
                 dist = min!(
                     dist + 1,
                     *prev2 + 1,
-                    prev + (x1 != x2) as u8
+                    prev + (x1 != x2) as usize
                 );
                 prev = *prev2;
                 *prev2 = dist;
             }
         }
 
-        dist as usize
+        dist
     }
 
     /// Relative distance metric. Returns a number of edits relative to the length of
@@ -140,7 +140,7 @@ impl Levenshtein {
 
 #[cfg(test)]
 mod tests {
-    use super::{Levenshtein, DEFAULT_CAPACITY};
+    use super::Levenshtein;
 
     #[test]
     fn equality() {
@@ -260,19 +260,6 @@ mod tests {
     }
 
     #[test]
-    fn growth() {
-        let leven = Levenshtein::new();
-
-        for len in DEFAULT_CAPACITY + 1 .. DEFAULT_CAPACITY * 2 {
-            let v1: Vec<&usize> = [1].into_iter().cycle().take(len).collect();
-            let v2: Vec<&usize> = [2].into_iter().cycle().take(len).collect();
-            assert_eq!(leven.distance(&v1, &v1), 0);
-            assert_eq!(leven.distance(&v1, &[]), len);
-            assert_eq!(leven.distance(&v1, &v2), len);
-        }
-    }
-
-    #[test]
     fn rel_dist() {
         let leven = Levenshtein::new();
         let sample = [
@@ -305,6 +292,20 @@ mod tests {
         for (d, s1, s2) in sample.iter() {
             assert_eq!(leven.similarity(s1, s2), *d);
             assert_eq!(leven.similarity(s2, s1), *d);
+        }
+    }
+
+    #[test]
+    fn growth() {
+        let leven = Levenshtein::new();
+        for len in (1..1001).step_by(100) {
+            let mut v1 = Vec::with_capacity(len);
+            let mut v2 = Vec::with_capacity(len);
+            v1.resize(len, 1);
+            v2.resize(len, 2);
+            assert_eq!(leven.distance(&v1, &v1), 0);
+            assert_eq!(leven.distance(&v1, &[]), len);
+            assert_eq!(leven.distance(&v1, &v2), len);
         }
     }
 }
