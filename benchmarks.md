@@ -2,59 +2,53 @@
 
 Below are the detailed tables with performance measurements for typical word lengths, including alternative implementations from crates.io that have Unicode support.
 
-All implementations were measured under two scenarios:
-1. Comparing a word, modified by two random typos, with the original.
-2. Comparing two unrelated words of the same length ("worst case").
+Due to optimizations, performance of Eddie implementations (except Hamming) changes significantly depending on how different compared strings are, besides their lengths, which is not the case for all the other measured libraries. For this reason Eddie implementations have a pair of measurements, produced under the following scenarios:
+1. Comparing the original world to it's version, modified by two random typos.
+2. Comparing two unrelated words of the same length (worst case).
 
-For each implementation two sets of results are provided if performance changes significantly under different scenarios, otherwise just one.
-
-Produced on Intel Core i5-4278U 2,6 GHz. All measurements are in microseconds.
+Produced on Intel Core i5-4278U 2,6 GHz. All measurements are in nanoseconds and rounded to 2 significant digits.
 
 
 ### Levenshtein
 
-|                            |  len=3 |  len=6 |  len=9 |  len=12 |  len=15 |
-| :------------------------- | -----: | -----: | -----: | ------: | ------: |
-| **eddie 0.3**              |   0.03 |   0.06 |   0.09 |    0.12 |    0.18 |
-| **eddie 0.3** (worst case) |   0.05 |   0.13 |   0.26 |    0.41 |    0.61 |
-| **strsim 0.9**             |   0.13 |   0.21 |   0.35 |    0.55 |    0.76 |
-| **edit_distance 2.1**      |   0.16 |   0.22 |   0.34 |    0.49 |    0.80 |
-| **distance 0.4**           |   0.92 |   1.56 |   2.48 |    2.95 |    3.92 |
+|                       |   len=3 |    len=6 |    len=9 |    len=12 |    len=15 |
+| :-------------------- | ------: | -------: | -------: | --------: | --------: |
+| **eddie 0.3**         | 30 - 50 | 60 - 130 | 90 - 260 | 120 - 410 | 180 - 610 |
+| **strsim 0.9**        |     130 |      210 |      350 |       550 |       760 |
+| **edit_distance 2.1** |     160 |      220 |      340 |       490 |       800 |
+| **distance 0.4**      |     920 |     1600 |     2500 |      3000 |      3900 |
 
 
 ### Damerau-Levenshtein
 
-|                            |  len=3 |  len=6 |  len=9 |  len=12 |  len=15 |
-| :------------------------- | -----: | -----: | -----: | ------: | ------: |
-| **eddie 0.3**              |   0.22 |   0.31 |   0.37 |     0.5 |    0.62 |
-| **eddie 0.3** (worst case) |   0.32 |   0.74 |   1.41 |    2.44 |    3.94 |
-| **strsim 0.9**             |   0.94 |   2.03 |   3.69 |    5.14 |    7.33 |
-| **distance 0.4**           |   1.79 |   3.18 |   5.45 |    7.73 |   10.92 |
+|                   |     len=3 |       len=6 |      len=9 |     len=12 |     len=15 |
+| :---------------- | --------: | ----------: | ---------: | ---------: | ---------: |
+| **eddie 0.3**     | 220 - 320 |   310 - 740 | 370 - 1400 | 500 - 2400 | 620 - 3900 |
+| **strsim 0.9**    |       940 |        2000 |       3700 |       5100 |       7300 |
+| **distance 0.4**  |      1800 |        3200 |       5400 |       7700 |      10900 |
 
 
 ### Hamming
 
-|                  |  len=3 |  len=6 |  len=9 |  len=12 |  len=15 |
-| :--------------- | -----: | -----: | -----: | ------: | ------: |
-| **eddie 0.3**    |  0.012 |  0.019 |  0.026 |   0.036 |   0.045 |
-| **strsim 0.9**   |  0.012 |  0.019 |  0.026 |   0.036 |   0.045 |
-| **distance 0.4** |  0.017 |  0.027 |  0.036 |   0.051 |   0.061 |
+|                  | len=3 | len=6 | len=9 | len=12 | len=15 |
+| :--------------- | ----: | ----: | ----: | -----: | -----: |
+| **eddie 0.3**    |    12 |    19 |    26 |     36 |     45 |
+| **strsim 0.9**   |    12 |    19 |    26 |     36 |     45 |
+| **distance 0.4** |    17 |    27 |    36 |     51 |     61 |
 
 
 ### Jaro
 
-|                            |  len=3 |  len=6 |  len=9 |  len=12 |  len=15 |
-| :------------------------- | -----: | -----: | -----: | ------: | ------: |
-| **eddie 0.3**              |   0.06 |   0.09 |   0.11 |    0.14 |    0.17 |
-| **eddie 0.3** (worst case) |   0.06 |   0.09 |   0.13 |    0.19 |    0.23 |
-| **strsim 0.9**             |   0.13 |   0.17 |   0.23 |    0.33 |    0.41 |
+|                | len=3 | len=6 |     len=9 |    len=12 |    len=15 |
+| :------------- | ----: | ----: | --------: | --------: | --------: |
+| **eddie 0.3**  |    60 |    90 | 110 - 130 | 140 - 190 | 170 - 230 |
+| **strsim 0.9** |   130 |   170 |       230 |       330 |       410 |
 
 
 ### Jaro-Winkler
 
-|                            |  len=3 |  len=6 |  len=9 |  len=12 |  len=15 |
-| :------------------------- | -----: | -----: | -----: | ------: | ------: |
-| **eddie 0.3**              |   0.07 |   0.10 |   0.11 |    0.14 |    0.17 |
-| **eddie 0.3** (worst case) |   0.07 |   0.10 |   0.13 |    0.19 |    0.23 |
-| **strsim 0.9**             |   0.15 |   0.22 |   0.24 |    0.34 |    0.36 |
-| **natural 0.3**            |  panic |   0.86 |   1.33 |    1.50 |    1.69 |
+|                 | len=3 | len=6 |     len=9 |    len=12 |    len=15 |
+| :-------------- | ----: | ----: | --------: | --------: | --------: |
+| **eddie 0.3**   |    70 |   100 | 110 - 130 | 140 - 190 | 170 - 230 |
+| **strsim 0.9**  |   150 |   220 |       240 |       340 |       360 |
+| **natural 0.3** | panic |   860 |      1300 |      1500 |      1700 |

@@ -61,8 +61,8 @@ pub fn hamming_benchmark(cr: &mut Criterion) {
 criterion_group!{
     name = benches;
     config = Criterion::default()
-                .warm_up_time(Duration::from_millis(20))
-                .measurement_time(Duration::from_millis(50));
+                .warm_up_time(Duration::from_millis(50))
+                .measurement_time(Duration::from_millis(200));
     targets = hamming_benchmark
 }
 
