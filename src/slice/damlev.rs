@@ -83,18 +83,18 @@ impl<T: PartialEq + Copy + Ord> DamerauLevenshtein<T> {
     /// assert_eq!(dist, 1);
     /// ```
     pub fn distance(&self, slice1: &[T], slice2: &[T]) -> usize {
-        let dists   = &mut *self.dists.borrow_mut();
-        let last_i1 = &mut *self.last_i1.borrow_mut();
-
-        last_i1.clear();
-
         let (prefix, postfix) = common_affix_sizes(slice1, slice2);
-        let slice1 = { let len = slice1.len(); &slice1[prefix .. len - postfix] };
-        let slice2 = { let len = slice2.len(); &slice2[prefix .. len - postfix] };
-        let len1 = slice1.len();
-        let len2 = slice2.len();
+        let mut slice1 = { let len = slice1.len(); &slice1[prefix .. len - postfix] };
+        let mut slice2 = { let len = slice2.len(); &slice2[prefix .. len - postfix] };
+        if slice2.len() < slice1.len() {
+            std::mem::swap(&mut slice1, &mut slice2);
+        }
 
-        dists.grow(max(len1 + 2, len2 + 2));
+        let dists = &mut *self.dists.borrow_mut();
+        dists.grow(max(slice1.len() + 2, slice2.len() + 2));
+
+        let last_i1 = &mut *self.last_i1.borrow_mut();
+        last_i1.clear();
 
         for (i1, &x1) in slice1.iter().enumerate() {
             let mut l2 = 0;
@@ -116,7 +116,7 @@ impl<T: PartialEq + Copy + Ord> DamerauLevenshtein<T> {
             last_i1.insert(x1, i1 + 1);
         }
 
-        let dist = unsafe { dists.get(len1 + 1, len2 + 1) };
+        let dist = unsafe { dists.get(slice1.len() + 1, slice2.len() + 1) };
         dist
     }
 

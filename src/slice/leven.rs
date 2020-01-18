@@ -77,11 +77,14 @@ impl Levenshtein {
     /// assert_eq!(dist, 2);
     /// ```
     pub fn distance<T: PartialEq + Copy>(&self, slice1: &[T], slice2: &[T]) -> usize {
-        let dists = &mut *self.dists.store(1 .. slice2.len() + 2).borrow_mut();
-
         let (prefix, postfix) = common_affix_sizes(slice1, slice2);
-        let slice1 = { let len = slice1.len(); &slice1[prefix .. len - postfix] };
-        let slice2 = { let len = slice2.len(); &slice2[prefix .. len - postfix] };
+        let mut slice1 = { let len = slice1.len(); &slice1[prefix .. len - postfix] };
+        let mut slice2 = { let len = slice2.len(); &slice2[prefix .. len - postfix] };
+        if slice2.len() < slice1.len() {
+            std::mem::swap(&mut slice1, &mut slice2);
+        }
+
+        let dists = &mut *self.dists.store(1 .. slice2.len() + 2).borrow_mut();
 
         let mut dist = slice2.len();
         let mut prev;

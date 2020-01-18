@@ -79,8 +79,11 @@ impl Jaro {
         }
 
         let prefix = common_prefix_size(slice1, slice2);
-        let slice1 = &slice1[prefix..];
-        let slice2 = &slice2[prefix..];
+        let mut slice1 = &slice1[prefix..];
+        let mut slice2 = &slice2[prefix..];
+        if slice2.len() < slice1.len() {
+            std::mem::swap(&mut slice1, &mut slice2);
+        }
 
         let matches1 = &mut *self.matches1.borrow_mut();
         let matches2 = &mut *self.matches2.borrow_mut();
