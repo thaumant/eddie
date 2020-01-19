@@ -22,7 +22,7 @@ macro_rules! max {
 
 
 pub fn common_prefix_size<T: Copy + PartialEq>(slice1: &[T], slice2: &[T]) -> usize {
-    slice1.into_iter().zip(slice2.into_iter())
+    slice1.iter().zip(slice2.iter())
         .take_while(|(ch1, ch2)| ch1 == ch2)
         .count()
 }
@@ -31,7 +31,7 @@ pub fn common_prefix_size<T: Copy + PartialEq>(slice1: &[T], slice2: &[T]) -> us
 pub fn common_affix_sizes<T: Copy + PartialEq>(slice1: &[T], slice2: &[T]) -> (usize, usize) {
     let min_len = min(slice1.len(), slice2.len());
     let prefix = common_prefix_size(slice1, slice2);
-    let suffix = slice1.into_iter().rev().zip(slice2.into_iter().rev())
+    let suffix = slice1.iter().rev().zip(slice2.iter().rev())
         .take(min_len - prefix)
         .take_while(|(item1, item2)| item1 == item2)
         .count();

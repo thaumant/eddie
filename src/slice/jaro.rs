@@ -115,14 +115,13 @@ impl Jaro {
 
         if prefix + matches == 0 { return 0.0; }
 
-        let mut trans = 0;
-        if matches != 0 {
+        let trans = if matches == 0 { 0 } else {
             let matched1 = (slice1, matches1).zip().filter_map(|(x, m)| some_if(*m, *x));
             let matched2 = (slice2, matches2).zip().filter_map(|(x, m)| some_if(*m, *x));
-            trans = (matched1, matched2).zip()
+            (matched1, matched2).zip()
                 .filter(|(x1, x2)| x1 != x2)
-                .count();
-        }
+                .count()
+        };
 
         let matches = (prefix + matches) as f64;
         let trans = trans as f64;

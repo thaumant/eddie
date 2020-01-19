@@ -100,8 +100,8 @@ impl JaroWinkler {
         let jaro_dist = self.jaro.similarity(slice1, slice2);
         if jaro_dist == 0. { return 0.; }
 
-        let prefix_size = slice1.into_iter()
-            .zip(slice2.into_iter())
+        let prefix_size = slice1.iter()
+            .zip(slice2.iter())
             .take(MAX_PREFIX)
             .take_while(|(x1, x2)| x1 == x2)
             .count() as f64;

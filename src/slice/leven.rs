@@ -89,11 +89,11 @@ impl Levenshtein {
         let mut dist = slice2.len();
         let mut prev;
 
-        for (i1, x1) in slice1.into_iter().enumerate() {
+        for (i1, x1) in slice1.iter().enumerate() {
             dist = i1 + 1;
             prev = i1;
 
-            for (x2, prev2) in slice2.into_iter().zip(dists.into_iter()) {
+            for (x2, prev2) in slice2.iter().zip(dists.iter_mut()) {
                 dist = min!(
                     dist + 1,
                     *prev2 + 1,

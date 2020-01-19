@@ -42,7 +42,7 @@ impl DistMatrix {
     }
 
     #[inline]
-    pub unsafe fn set(&mut self, i: usize, j: usize, val: usize) -> () {
+    pub unsafe fn set(&mut self, i: usize, j: usize, val: usize) {
         *self.raw.get_unchecked_mut(i * self.size + j) = val;
     }
 }

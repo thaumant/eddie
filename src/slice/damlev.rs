@@ -116,8 +116,7 @@ impl<T: PartialEq + Copy + Ord> DamerauLevenshtein<T> {
             last_i1.insert(x1, i1 + 1);
         }
 
-        let dist = unsafe { dists.get(slice1.len() + 1, slice2.len() + 1) };
-        dist
+        unsafe { dists.get(slice1.len() + 1, slice2.len() + 1) }
     }
 
     /// Relative distance metric. Returns a number of edits relative to the length of

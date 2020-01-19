@@ -98,8 +98,8 @@ impl Hamming {
     /// ```
     pub fn distance<T: PartialEq + Copy>(&self, slice1: &[T], slice2: &[T]) -> Option<usize> {
         if slice1.len() != slice2.len() { return None; }
-        let dist = slice1.into_iter()
-            .zip(slice2.into_iter())
+        let dist = slice1.iter()
+            .zip(slice2.iter())
             .filter(|(x1, x2)| x1 != x2)
             .count();
         Some(dist)
